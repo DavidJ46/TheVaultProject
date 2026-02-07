@@ -50,17 +50,20 @@ class LoginScreen:
             print(f"Login Error: {e}")
             return False
 
+#By Ryan Grimes on 2/2/2026
 #  FLASK WEB SERVER SETUP 
 app = Flask(__name__) #Create website object
 app.secret_key = os.urandom(24) # Encrypts session connection
 auth_system = LoginScreen() #Allows the website to use functions in LoginScreen class
 
+#By Ryan Grimes on 2/2/2026
 @app.route('/') #Tells Flask to automatically run the following function when they visit the main homepage
 def home():
     if 'user' in session: #Checks if user is already logged in
         return f"Logged in as {session['user']} | <a href='/logout'>Logout</a>" #Welcome screen with logout screen
     return "Welcome to The Vault! Please <a href='/login'>Login</a> or <a href='/signup'>Signup</a>." #Default screen with Login and Signup buttons
 
+#By Ryan Grimes on 2/2/2026
 @app.route('/signup', methods=['GET', 'POST']) #A function for when the signup button is clicked
 def signup():
     if request.method == 'POST': #Submits inputted credentials to database when Submit button is clicked
@@ -81,6 +84,7 @@ def signup():
         </form>
     '''
 
+#By Ryan Grimes on 2/2/2026
 @app.route('/login', methods=['GET', 'POST']) #A function for when the login button is clicked
 def login():
     if request.method == 'POST': #Requests inputted username and password from database when Login button is clicked
@@ -100,16 +104,19 @@ def login():
         </form>
     '''
 
+#By Ryan Grimes on 2/2/2026
 @app.route('/listings') # If a user was not properly logged in, they don't have access to the listing screen
 def listings():
     if 'user' not in session:
         return redirect(url_for('login'))
     return f"<h1>Marketplace Listings</h1><p>Hello {session['user']}, welcome to the Vault!</p>"
 
+#By Ryan Grimes on 2/2/2026
 @app.route('/logout') #Erases the cookie allowing them access to validated screens and redirects them to login screen
 def logout():
     session.pop('user', None) #Kills the session that allows access to validated screens
     return redirect(url_for('home')) #Redirects logged out user to home screen
 
+#By Ryan Grimes on 2/2/2026
 if __name__ == "__main__": #Starts webpage
     app.run(debug=True, port=5000) #Flask engine listens on localhost: 5000 for visitors and provides error messages
