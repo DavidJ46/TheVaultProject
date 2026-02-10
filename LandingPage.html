@@ -1,1 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Vault</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --steel:#232a33;
+      --steel2:#2f3844;
+      --rim:#3c4654;
+      --gold:#c8a24a;
+      --ink:#e9eef6;
+      --muted:#a8b3c5;
+      --shadow: rgba(0,0,0,.45);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background: radial-gradient(1200px 700px at 50% 10%, #18202a 0%, var(--bg) 55%, #070a0e 100%);
+      overflow-x:hidden;
+    }
+
+    /* Make scroll space to drive the animation */
+    .scroll-track{
+      height: 220vh; /* adjust to taste: more height = slower opening */
+    }
+
+    .hero{
+      position: sticky;
+      top:0;
+      height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 28px;
+    }
+
+    .scene{
+      width: min(980px, 92vw);
+      height: min(560px, 70vh);
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow: 0 24px 80px var(--shadow);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    /* Background "vault room" behind the door */
+    .room{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 500px at 60% 45%, rgba(200,162,74,.18), transparent 60%),
+        radial-gradient(900px 500px at 40% 55%, rgba(110,180,255,.08), transparent 62%),
+        linear-gradient(180deg, #0f141b 0%, #090c11 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .room-inner{
+      text-align:center;
+      padding: 18px 22px;
+    }
+
+    .brand{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      padding: 8px 14px;
+      border: 1px solid rgba(200,162,74,.32);
+      border-radius: 999px;
+      color: var(--gold);
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      font-size: 12px;
+      background: rgba(0,0,0,.25);
+    }
+
+    .title{
+      margin: 14px 0 6px;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 750;
+    }
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      font-size: clamp(14px, 1.7vw, 17px);
+      max-width: 52ch;
+    }
+
+    .hint{
+      position:absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      color: rgba(233,238,246,.75);
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(0,0,0,.28);
+      border: 1px solid rgba(255,255,255,.10);
+      padding: 10px 12px;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+    }
+    .chev{
+      width:10px; height:10px;
+      border-right: 2px solid rgba(233,238,246,.75);
+      border-bottom: 2px solid rgba(233,238,246,.75);
+      transform: rotate(45deg);
+      margin-top:-2px;
+      animation: bob 1.2s ease-in-out infinite;
+    }
+    @keyframes bob{
+      0%,100%{ transform: translateY(-2px) rotate(45deg); }
+      50%{ transform: translateY(2px) rotate(45deg); }
+    }
+
+    /* Vault door group */
+    .door-wrap{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      perspective: 1400px;
+      pointer-events:none;
+    }
+
+    /* Door swings around left hinge */
+    .door{
+      width: min(520px, 72vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 22px;
+      position: relative;
+      transform-origin: 6% 50%;
+      transform: rotateY(0deg);
+      background: linear-gradient(145deg, var(--steel2), var(--steel));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 22px 60px rgba(0,0,0,.55);
+    }
+
+    /* Outer rim */
+    .door::before{
+      content:"";
+      position:absolute;
+      inset: 14px;
+      border-radius: 18px;
+      border: 2px solid rgba(255,255,255,.10);
+      box-shadow:
+        inset 0 0 0 6px rgba(0,0,0,.18),
+        inset 0 0 26px rgba(0,0,0,.38);
+    }
+
+    /* Inner circle */
+    .circle{
+      position:absolute;
+      inset: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.14), transparent 55%),
+                  radial-gradient(circle at 60% 70%, rgba(0,0,0,.35), transparent 52%),
+                  linear-gradient(180deg, #2a3340, #1b222b);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: inset 0 0 0 10px rgba(0,0,0,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .welcome{
+      position:absolute;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 750;
+      letter-spacing: .04em;
+      text-align:center;
+      width: 80%;
+      text-shadow: 0 10px 30px rgba(0,0,0,.55);
+    }
+    .welcome .small{
+      display:block;
+      font-size: 12px;
+      color: rgba(233,238,246,.78);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .welcome .big{
+      display:block;
+      font-size: 26px;
+      margin-top: 6px;
+    }
+
+    /* Door handle */
+    .handle{
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      position: relative;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), rgba(0,0,0,.2) 55%),
+                  linear-gradient(180deg, #2d3643, #1a2028);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 0 10px rgba(0,0,0,.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transform: rotate(0deg);
+    }
+
+    .handle::before{
+      content:"";
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(0,0,0,.25));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 6px 16px rgba(0,0,0,.35);
+      position:absolute;
+    }
+
+    .spoke{
+      position:absolute;
+      width: 120px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(200,162,74,.9), rgba(200,162,74,.35));
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      transform-origin: 50% 50%;
+    }
+    .spoke:nth-child(1){ transform: rotate(0deg); }
+    .spoke:nth-child(2){ transform: rotate(60deg); }
+    .spoke:nth-child(3){ transform: rotate(120deg); }
+
+    /* Main content revealed after door opens */
+    .main{
+      padding: 80px 28px 120px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .card{
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 18px 40px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+    }
+
+    .card h3{ margin:0 0 8px; font-size: 18px; }
+    .card p{ margin:0; color: rgba(233,238,246,.78); line-height:1.45; }
+
+    .btn{
+      display:inline-block;
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(200,162,74,.35);
+      color: var(--gold);
+      text-decoration:none;
+      font-weight: 650;
+      background: rgba(0,0,0,.22);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .chev{ animation:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Scroll track drives the "open vault" animation while hero is sticky -->
+  <section class="scroll-track">
+    <div class="hero">
+      <div class="scene" aria-label="The Vault landing screen">
+        <div class="room">
+          <div class="room-inner">
+            <span class="brand">The Vault</span>
+            <h1 class="title">Enter the marketplace.</h1>
+            <p class="subtitle">Scroll down to unlock the vault and step into Hampton’s student-run storefront.</p>
+          </div>
+        </div>
+
+        <div class="door-wrap">
+          <div class="door" id="door" aria-hidden="true">
+            <div class="welcome">
+              <span class="small">Welcome to</span>
+              <span class="big">The Vault</span>
+            </div>
+
+            <div class="circle">
+              <div class="handle" id="handle">
+                <span class="spoke"></span>
+                <span class="spoke"></span>
+                <span class="spoke"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint" aria-hidden="true">
+          <span class="chev"></span>
+          <span>Scroll to unlock</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main page content -->
+  <main class="main" id="main">
+    <h2 style="margin:0; font-size:28px;">The Vault Marketplace</h2>
+    <p style="margin:8px 0 0; color: rgba(233,238,246,.78); max-width: 70ch;">
+      Prototype area: login + storefront modules will live here once the vault opens.
+    </p>
+
+    <div class="cards">
+      <section class="card">
+        <h3>Login</h3>
+        <p>Student sign-in (Hampton email verification flow later).</p>
+        <a class="btn" href="#/">Go to Login</a>
+      </section>
+
+      <section class="card">
+        <h3>Storefront</h3>
+        <p>Browse listings, filter by category, view item details.</p>
+        <a class="btn" href="#/">View Listings</a>
+      </section>
+
+      <section class="card">
+        <h3>Sell</h3>
+        <p>Create a listing with title, description, price, and photos.</p>
+        <a class="btn" href="#/">Create Listing</a>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const door = document.getElementById('door');
+      const handle = document.getElementById('handle');
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+      function onScroll(){
+        // progress from 0 to 1 over the scroll-track section
+        const track = document.querySelector('.scroll-track');
+        const rect = track.getBoundingClientRect();
+        const total = track.offsetHeight - window.innerHeight;
+        const scrolled = clamp(-rect.top, 0, total);
+        const p = total > 0 ? scrolled / total : 0;
+
+        // Handle rotation (0 -> ~220deg)
+        const handleDeg = prefersReduced ? 0 : (p * 220);
+        handle.style.transform = `rotate(${handleDeg}deg)`;
+
+        // Door swing open (0 -> ~78deg) after a little "crank"
+        const swingProgress = clamp((p - 0.25) / 0.75, 0, 1); // starts opening after 25%
+        const doorDeg = prefersReduced ? 0 : (-swingProgress * 78);
+        door.style.transform = `rotateY(${doorDeg}deg)`;
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>
 
