@@ -16,6 +16,7 @@ def create_vault_tables():
         )
         cur = conn.cursor()
         
+
         # SQL command to build the users table structure
         # 'IF NOT EXISTS' prevents errors if the table is already there
         create_table_command = """
@@ -24,6 +25,7 @@ def create_vault_tables():
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
+                role VARCHAR(10) DEFAULT 'user',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """
