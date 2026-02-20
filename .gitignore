@@ -1,4 +1,3 @@
-# Security: NEVER upload your AWS credentials
 .env
 
 # Python: Ignore local environment and cache files
