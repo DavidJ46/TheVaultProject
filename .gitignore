@@ -1,0 +1,13 @@
+# Security: NEVER upload your AWS credentials
+.env
+
+# Python: Ignore local environment and cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+
+# OS: Ignore Mac-specific system files
+.DS_Store
