@@ -11,15 +11,24 @@ This folder contains the Flask backend for The Vault project.
 ```
 
 backend/
+
 ├── app.py                # Flask app factory & blueprint registration
+
 ├── requirements.txt      # Python dependencies
+
 ├── init_db.py            # Database initialization script
+
 │
 ├── config/               # App configuration
+
 ├── controllers/          # Route handlers (Flask Blueprints)
+
 ├── services/             # Business logic layer
+
 ├── models/               # Database models / schema
+
 ├── utils/                # Helpers (DB connection, security, etc.)
+
 └── tests/                # Backend tests
 
 ```
