@@ -1,3 +1,72 @@
+## 📁 Backend Structure
+
+Our backend follows a layered architecture to keep the project organized and maintainable.
+
+### config/
+Contains application configuration and setup settings.
+- Database connection (PostgreSQL / RDS)
+- Environment variables
+- AWS configuration (S3 bucket, region)
+- Security settings (JWT, secret keys)
+
+This folder controls how the app runs.
+
+---
+
+### controllers/
+Handles HTTP requests and responses (API endpoints).
+- Defines routes (GET, POST, PUT, DELETE)
+- Reads request data
+- Performs basic validation
+- Calls service layer functions
+- Returns JSON responses
+
+
+---
+
+### models/
+Defines the database structure using models.
+- User model
+- Listing model
+- Transaction model (purchase history)
+- Relationships between tables
+
+Models define what data looks like and how it is stored.
+
+---
+
+### services/
+Contains the core business logic of the application.
+- User registration and authentication logic
+- Listing creation and management
+- Purchase/transaction processing
+- Admin moderation functionality
+
+Services handle multi-step workflows and interact with models.
+
+---
+
+### utils/
+Reusable helper functions used across the application.
+- Password hashing
+- JWT helpers
+- Input validation
+- S3 upload helpers
+- Custom error handling
+
+Utilities support the application but do not contain business workflows.
+
+---
+
+### tests/
+Contains automated tests for core functionality.
+- Authentication tests
+- Listing tests
+- Transaction tests
+
+Tests help ensure major marketplace features work correctly.
+
+
 
 ```markdown
 # The Vault – Backend (Flask)
