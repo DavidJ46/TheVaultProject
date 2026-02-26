@@ -46,7 +46,7 @@ def create_vault_tables():
 
         #____________________________________________
         # Storefront Table. One storefront per user 
-        # Day Ekoi 2/26/26
+        # Added by Day Ekoi 2/26/26
         #____________________________________________
         create_storefronts_table = """
             CREATE TABLE IF NOT EXISTS storefronts (
