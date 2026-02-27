@@ -3,35 +3,40 @@
 # Created by Day Ekoi - Iteration 3
 
 """
-listing_model.py file
-Created by: Day Ekoi 
+listing_model.py
 
-Purpose: This file handles all direct database operations related to the 'listings' table
+Purpose:
+This file handles all direct database operations related to the `listings` table
 in PostgreSQL using psycopg2.
 
-IT will:
-- Insert new listing records 
+It will:
+- Insert new listing records
 - Retrieve listing data
 - Update listing data
-- soft Delete listings (status = 'DELETED')
-- Return results as dictionaries 
-
+- Soft delete listings (status = 'DELETED')
+- Return results as dictionaries
 """
 
-from db import get_connection()
+from db import get_connection
 
-def create_listing(storefront_id, title, description, price, 
-                   fullfillment_type, quanitity_on_hand=None,
-                   sizes_available=None, status="ACTIVE"):
 
-"""
-This inserts a new listing and returns the created listing as a dictionary.
-"""
+def create_listing(
+    storefront_id,
+    title,
+    description,
+    price,
+    fulfillment_type,
+    quantity_on_hand=None,
+    sizes_available=None,
+    status="ACTIVE"
+):
+    """
+    Inserts a new listing and returns the created listing as a dictionary.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
 
-conn = get_connection()
-cur - conn.cursor()
-
-query =  """
+    query = """
         INSERT INTO listings
         (storefront_id, title, description, price, fulfillment_type, quantity_on_hand, sizes_available, status)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -39,18 +44,25 @@ query =  """
                   fulfillment_type, quantity_on_hand, sizes_available,
                   status, created_at, updated_at;
     """
-cur.execute(query, (
-    storefront_id, title, description, price,
-    fulfillment_type, quantity_on_hand, sizes_available, status
- ))
 
-row = cur.fetchone()
-conn.commit()
+    cur.execute(query, (
+        storefront_id,
+        title,
+        description,
+        price,
+        fulfillment_type,
+        quantity_on_hand,
+        sizes_available,
+        status
+    ))
 
-cur.close()
-conn.close()
+    row = cur.fetchone()
+    conn.commit()
 
-return {
+    cur.close()
+    conn.close()
+
+    return {
         "id": row[0],
         "storefront_id": row[1],
         "title": row[2],
@@ -64,15 +76,16 @@ return {
         "updated_at": row[10],
     }
 
+
 def get_listing_by_id(listing_id):
-  """
-  Retrieves a listing by its PK (id). Returns none if not found
-  """
+    """
+    Retrieves a listing by its PK (id).
+    Returns None if not found.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
 
-conn = get_connection()
-cur = conn.cursor()
-
-query = """
+    query = """
         SELECT id, storefront_id, title, description, price,
                fulfillment_type, quantity_on_hand, sizes_available,
                status, created_at, updated_at
@@ -106,10 +119,9 @@ query = """
 
 def get_listings_by_storefront_id(storefront_id):
     """
-    Retrieves all listings for a storefront (used for a storefront page).
+    Retrieves all non-deleted listings for a storefront.
     Returns a list of listing dictionaries.
     """
-
     conn = get_connection()
     cur = conn.cursor()
 
@@ -148,14 +160,20 @@ def get_listings_by_storefront_id(storefront_id):
     return listings
 
 
-def update_listing(listing_id, title=None, description=None, price=None,
-                   fulfillment_type=None, quantity_on_hand=None,
-                   sizes_available=None, status=None):
+def update_listing(
+    listing_id,
+    title=None,
+    description=None,
+    price=None,
+    fulfillment_type=None,
+    quantity_on_hand=None,
+    sizes_available=None,
+    status=None
+):
     """
-    Updates editable listing fields using COALESCE, returns updated listing.
+    Updates editable listing fields using COALESCE and returns updated listing.
     Returns None if listing does not exist.
     """
-
     conn = get_connection()
     cur = conn.cursor()
 
@@ -176,9 +194,13 @@ def update_listing(listing_id, title=None, description=None, price=None,
     """
 
     cur.execute(query, (
-        title, description, price,
-        fulfillment_type, quantity_on_hand,
-        sizes_available, status,
+        title,
+        description,
+        price,
+        fulfillment_type,
+        quantity_on_hand,
+        sizes_available,
+        status,
         listing_id
     ))
 
@@ -210,5 +232,4 @@ def soft_delete_listing(listing_id):
     """
     Soft deletes a listing by setting status = 'DELETED'.
     """
-
     return update_listing(listing_id, status="DELETED")
