@@ -10,7 +10,9 @@ This file:
 - Establishes PostgreSQL connections
 - Returns a reusable get_connection() function
 - Is used by models to execute SQL queries
+
 """
+
 import os
 import psycopg2
 from dotenv import load_dotenv
@@ -19,9 +21,9 @@ load_dotenv()
 
 
 def get_connection():
-    
-    Creates and returns a new PostgreSQL connection for runtime DB operations.
-    Uses the same environment variables as init_db.py.
+    """
+    Creates and returns a new PostgreSQL connection
+    using environment variables.
     """
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
