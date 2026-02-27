@@ -1,3 +1,7 @@
+# The Vault Campus Marketplace
+# CSC 405 Sp 26'
+# Created by Day Ekoi - Iteration 3
+
 """
 listing_model.py file
 Created by: Day Ekoi 
