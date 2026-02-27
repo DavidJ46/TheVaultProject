@@ -1,12 +1,13 @@
-""" 
+"""
 init_db.py
+
 Purpose:
-This file is responsible for initializing the PostgreSQL database schema for The Vault 
+This file initializes the PostgreSQL database schema for The Vault.
 It creates all required database tables if they do not already exist.
 
-It is meant to be run manually when 
-- Setting up the project fo thre first time 
-- Deplyoing to a new environment 
+Run this file manually when:
+- Setting up the project for the first time
+- Deploying to a new environment
 - Ensuring the database schema is properly initialized
 """
 
@@ -14,23 +15,23 @@ import psycopg2
 import os
 from dotenv import load_dotenv
 
-# Load the credentials your teammate provided
 load_dotenv()
+
 
 def create_vault_tables():
     try:
-        # Establish the connection using the Success-verified settings
         conn = psycopg2.connect(
-            host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD')
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD")
         )
-        cur = conn.cursor()
-        
 
-        # SQL command to build the users table structure
-        # 'IF NOT EXISTS' prevents errors if the table is already there
+        cur = conn.cursor()
+
+        # ________________________________________________________
+        # USERS TABLE
+        # ________________________________________________________
         create_users_table = """
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -41,13 +42,12 @@ def create_vault_tables():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """
-        
         cur.execute(create_users_table)
 
-        #____________________________________________
-        # Storefront Table. One storefront per user 
+        # ________________________________________________________
+        # STOREFRONTS TABLE (One storefront per user)
         # Added by Day Ekoi 2/26/26
-        #____________________________________________
+        # ________________________________________________________
         create_storefronts_table = """
             CREATE TABLE IF NOT EXISTS storefronts (
                 id SERIAL PRIMARY KEY,
@@ -67,14 +67,12 @@ def create_vault_tables():
                     ON DELETE CASCADE
             );
         """
-        cur.execute)create_storefronts_table)
+        cur.execute(create_storefronts_table)
 
-        #__________________________________________________
-        # Listings TABLE
-        # Each listing belongs to a storefront 
+        # ________________________________________________________
+        # LISTINGS TABLE (Each listing belongs to a storefront)
         # Added by Day Ekoi 2/26/26
-        #__________________________________________________
-
+        # ________________________________________________________
         create_listings_table = """
             CREATE TABLE IF NOT EXISTS listings (
                 id SERIAL PRIMARY KEY,
@@ -105,11 +103,10 @@ def create_vault_tables():
         """
         cur.execute(create_listings_table)
 
-        # _______________________________________________________________
-        # Listing IMAGES TABLE: This supports multiple images per listing 
+        # ________________________________________________________
+        # LISTING IMAGES TABLE (Multiple images per listing)
         # Added by Day Ekoi 2/26/26
-        # _______________________________________________________________
-
+        # ________________________________________________________
         create_listing_images_table = """
             CREATE TABLE IF NOT EXISTS listing_images (
                 id SERIAL PRIMARY KEY,
@@ -126,44 +123,39 @@ def create_vault_tables():
         """
         cur.execute(create_listing_images_table)
 
-        #_____________________________________________________________________
-        # Listing SIZES Tbale: This tracks inventory per size (S/M/L/ONE_SIZE
-        # Created by: Day Ekoi 2/26/26
-        # ____________________________________________________________________
+        # ________________________________________________________
+        # LISTING SIZES TABLE (Inventory per size)
+        # Added by Day Ekoi 2/26/26
+        # ________________________________________________________
         create_listing_sizes_table = """
             CREATE TABLE IF NOT EXISTS listing_sizes (
                 id SERIAL PRIMARY KEY,
                 listing_id INTEGER NOT NULL,
-        
-                -- Example values: 'S', 'M', 'L', 'XL', 'ONE_SIZE'
                 size VARCHAR(20) NOT NULL,
-        
-                -- Inventory for this specific size
                 quantity INTEGER NOT NULL CHECK (quantity >= 0),
-        
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        
+
                 CONSTRAINT fk_size_listing
                     FOREIGN KEY(listing_id)
                     REFERENCES listings(id)
                     ON DELETE CASCADE,
-        
-                -- Prevent duplicate size entries per listing
+
                 CONSTRAINT unique_listing_size
                     UNIQUE (listing_id, size)
-        );
-      """
-cur.execute(create_listing_sizes_table)
-        
-        conn.commit() # This saves the table to AWS
-        
-        print("✅ DATABASE INITIALIZED: users, storefronts, listings, listing_images tables are now live.")
-        
+            );
+        """
+        cur.execute(create_listing_sizes_table)
+
+        conn.commit()
+
+        print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, and listing_sizes tables are ready.")
+
         cur.close()
         conn.close()
-        
+
     except Exception as e:
-        print(f"❌ SCHEMA ERROR: {e}")
+        print(f"SCHEMA ERROR: {e}")
+
 
 if __name__ == "__main__":
     create_vault_tables()
