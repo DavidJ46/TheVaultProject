@@ -125,6 +125,35 @@ def create_vault_tables():
             );
         """
         cur.execute(create_listing_images_table)
+
+        #_____________________________________________________________________
+        # Listing SIZES Tbale: This tracks inventory per size (S/M/L/ONE_SIZE
+        # Created by: Day Ekoi 2/26/26
+        # ____________________________________________________________________
+        create_listing_sizes_table = """
+            CREATE TABLE IF NOT EXISTS listing_sizes (
+                id SERIAL PRIMARY KEY,
+                listing_id INTEGER NOT NULL,
+        
+                -- Example values: 'S', 'M', 'L', 'XL', 'ONE_SIZE'
+                size VARCHAR(20) NOT NULL,
+        
+                -- Inventory for this specific size
+                quantity INTEGER NOT NULL CHECK (quantity >= 0),
+        
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        
+                CONSTRAINT fk_size_listing
+                    FOREIGN KEY(listing_id)
+                    REFERENCES listings(id)
+                    ON DELETE CASCADE,
+        
+                -- Prevent duplicate size entries per listing
+                CONSTRAINT unique_listing_size
+                    UNIQUE (listing_id, size)
+        );
+      """
+cur.execute(create_listing_sizes_table)
         
         conn.commit() # This saves the table to AWS
         
