@@ -2,20 +2,6 @@
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3
 
-######### THIS CODE NEEDS TO BE UPDATED. MOST IS A PLACEHOLDER ##############
-""" 
-listing_controller.py
-
-Purpose:
-This file defines HTTP API endpoints for listing actions.
-
-It will:
-- parse rquest input 
-- get current_user (temp headers until we build AUTH file)
-- Call service functions
-- return JSON responses 
-"""
-
 """
 controllers/listing_controller.py
 
@@ -38,7 +24,16 @@ from services.listing_service import (
     get_listing_by_id_service,
     get_listings_for_storefront_service,
     update_listing_service,
-    delete_listing_service
+    delete_listing_service,
+    # listing images services (merged into listing_service.py)
+    add_listing_image_service,
+    get_listing_images_service,
+    set_primary_image_service,
+    delete_listing_image_service,
+    # listing sizes services (merged into listing_service.py)
+    upsert_listing_size_service,
+    get_listing_sizes_service,
+    delete_listing_size_service
 )
 
 listing_bp = Blueprint("listing_bp", __name__, url_prefix="/api")
@@ -64,6 +59,12 @@ def get_current_user():
     except Exception:
         return None
 
+
+#_________________
+# LISTING ROUTES
+# Purpose:
+# Core listing CRUD routes (create/read/update/delete).
+#_________________
 
 # __________________________________________________________
 # CREATE LISTING (Owner/Admin)
@@ -125,6 +126,7 @@ def get_listing_route(listing_id):
 # UPDATE LISTING (Owner/Admin)
 # PUT /api/listings/<listing_id>
 # _________________________________________________________
+
 @listing_bp.put("/listings/<int:listing_id>")
 def update_listing_route(listing_id):
     current_user = get_current_user()
@@ -159,6 +161,148 @@ def delete_listing_route(listing_id):
     try:
         deleted = delete_listing_service(current_user, listing_id)
         return jsonify(deleted), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+#_________________
+# LISTING IMAGES ROUTES
+# Purpose:
+# Routes for adding/removing images and setting the primary image for a listing.
+#_________________
+
+# Add image
+# POST /api/listings/<listing_id>/images
+@listing_bp.post("/listings/<int:listing_id>/images")
+def add_image_route(listing_id):
+    current_user = get_current_user()
+    data = request.get_json(silent=True) or {}
+
+    try:
+        result = add_listing_image_service(
+            current_user,
+            listing_id,
+            data.get("image_url"),
+            data.get("is_primary", False)
+        )
+        return jsonify(result), 201
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Get images
+# GET /api/listings/<listing_id>/images
+@listing_bp.get("/listings/<int:listing_id>/images")
+def get_images_route(listing_id):
+    try:
+        result = get_listing_images_service(listing_id)
+        return jsonify(result), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Set primary
+# PATCH /api/listings/<listing_id>/images/<image_id>/primary
+@listing_bp.patch("/listings/<int:listing_id>/images/<int:image_id>/primary")
+def set_primary_route(listing_id, image_id):
+    current_user = get_current_user()
+
+    try:
+        result = set_primary_image_service(current_user, listing_id, image_id)
+        return jsonify(result), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Delete image
+# DELETE /api/listings/<listing_id>/images/<image_id>
+@listing_bp.delete("/listings/<int:listing_id>/images/<int:image_id>")
+def delete_image_route(listing_id, image_id):
+    current_user = get_current_user()
+
+    try:
+        result = delete_listing_image_service(current_user, listing_id, image_id)
+        return jsonify(result), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+#_________________
+# LISTING SIZE ROUTES
+# Purpose:
+# Routes for managing size-based inventory for a listing.
+#_________________
+
+# Add / Update size
+# POST /api/listings/<listing_id>/sizes
+@listing_bp.post("/listings/<int:listing_id>/sizes")
+def upsert_size_route(listing_id):
+    current_user = get_current_user()
+    data = request.get_json(silent=True) or {}
+
+    try:
+        result = upsert_listing_size_service(
+            current_user,
+            listing_id,
+            data.get("size"),
+            data.get("quantity")
+        )
+        return jsonify(result), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Get sizes
+# GET /api/listings/<listing_id>/sizes
+@listing_bp.get("/listings/<int:listing_id>/sizes")
+def get_sizes_route(listing_id):
+    try:
+        result = get_listing_sizes_service(listing_id)
+        return jsonify(result), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Delete size
+# DELETE /api/listings/<listing_id>/sizes/<size>
+@listing_bp.delete("/listings/<int:listing_id>/sizes/<string:size>")
+def delete_size_route(listing_id, size):
+    current_user = get_current_user()
+
+    try:
+        result = delete_listing_size_service(current_user, listing_id, size)
+        return jsonify(result), 200
     except Exception as e:
         msg = str(e).lower()
         if "unauthorized" in msg:

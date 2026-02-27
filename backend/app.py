@@ -2,14 +2,13 @@ from flask import Flask
 from controllers.listing_controller import listing_bp
 from controllers.storefront_controller import storefront_bp
 
-from controllers.storefront_controller import storefront_bp
-from controllers.listing_controller import listing_bp
-from controllers.listing_image_controller import listing_image_bp
-from controllers.listing_size_controller import listing_size_bp
-
 
 def create_app():
     app = Flask(__name__)
+
+    # Register Blueprints
+    app.register_blueprint(listing_bp)
+    app.register_blueprint(storefront_bp)
 
     @app.get("/health")
     def health():
@@ -19,4 +18,5 @@ def create_app():
 
 
 if __name__ == "__main__":
-    create_app().run(debug=True)
+    app = create_app()
+    app.run(debug=True)
