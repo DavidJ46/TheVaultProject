@@ -1,14 +1,41 @@
-from loginScreen import LoginScreen
+#By Ryan Grimes 2/2/2026
+import sys
+import os
 
-# Initialize your class
-vault = LoginScreen()
+# Ensure Python can see backend folder and subfolders
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Try to register yourself as the first user
-success = vault.register_user(
-    username="RyanAdmin", 
-    password="SecurePassword123", 
-    email="ryan@example.com"
-)
+from services.auth_services import AuthService
+from config.db import get_db_connection
 
-if success:
-    print("Go to the team and tell them the Database is officially accepting users!")
+def test_registration():
+    auth = AuthService() #Initalize the service layer
+
+    conn = get_db_connection()
+
+    if not conn:
+        print("Could not connect to AWS RDS")
+        return
+
+    print("Attempting to register user...")
+
+    try:
+        success, message = auth.register_user(
+            db_conn=conn,
+            username="User", 
+            password="SecurePassword123", 
+            email="email@hamptonu.edu"
+        )
+
+        if success:
+            print("\nThe Database is officially accepting users!")
+            print(f"Message: {message}")
+        else:
+            print("\nRegistration failed")
+            print(f"Reason: {message}")
+
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    test_registration()
