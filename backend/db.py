@@ -11,24 +11,18 @@ def get_connection():
     using environment variables.
     Supports AWS RDS SSL configuration if provided.
     """
-    host = os.getenv("DB_HOST")
-    dbname = os.getenv("DB_NAME")
-    user = os.getenv("DB_USER")
-    password = os.getenv("DB_PASSWORD")
-    port = os.getenv("DB_PORT", "5432")
-
-    sslmode = os.getenv("SSL_MODE")
-    sslrootcert = os.getenv("SSL_ROOT_CERT")
 
     conn_kwargs = {
-        "host": host,
-        "database": dbname,
-        "user": user,
-        "password": password,
-        "port": port,
+        "host": os.getenv("DB_HOST"),
+        "dbname": os.getenv("DB_NAME"),
+        "user": os.getenv("DB_USER"),
+        "password": os.getenv("DB_PASSWORD"),
+        "port": int(os.getenv("DB_PORT", 5432)),
     }
 
-    # Only attach SSL settings if provided
+    sslmode = os.getenv("DB_SSLMODE")
+    sslrootcert = os.getenv("DB_SSLROOTCERT")
+
     if sslmode:
         conn_kwargs["sslmode"] = sslmode
 
