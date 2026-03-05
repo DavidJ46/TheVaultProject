@@ -1,3 +1,9 @@
+# Madison Boyd
+#Iteration 3
+#CSC 405
+#3/2/2025
+
+
 import unittest
 # We use absolute imports starting from the root 'backend'
 from backend.services.usersettings import update_wishlist, get_settings
