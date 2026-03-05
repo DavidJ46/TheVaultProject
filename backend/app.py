@@ -3,6 +3,7 @@ from controllers.listing_controller import listing_bp
 from controllers.storefront_controller import storefront_bp
 from controllers.purchase_controller import purchase_bp
 from controllers.wishlist_controller import wishlist_bp
+from controllers.admin_controller import admin_bp
 
 
 def create_app():
@@ -13,6 +14,7 @@ def create_app():
     app.register_blueprint(storefront_bp)
     app.register_blueprint(purchase_bp)
     app.register_blueprint(wishlist_bp)
+    app.register_blueprint(admin_bp)
 
     @app.get("/health")
     def health():
