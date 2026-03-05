@@ -146,9 +146,64 @@ def create_vault_tables():
         """
         cur.execute(create_listing_sizes_table)
 
+        # ________________________________________________________
+        # PURCHASES TABLE (Purchase history for users)
+        # Added by Elali McNair 3/3/26
+        # The frontend protion of this code is not finished or implemented yet. Therfore, this code is not oporational or properly implemented yet.
+        # ________________________________________________________
+        create_purchases_table = """
+            CREATE TABLE IF NOT EXISTS purchases (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                listing_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL CHECK (quantity > 0),
+                purchase_price NUMERIC(10,2) NOT NULL CHECK (purchase_price >= 0),
+                purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                CONSTRAINT fk_purchase_user
+                    FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE,
+
+                CONSTRAINT fk_purchase_listing
+                    FOREIGN KEY(listing_id)
+                    REFERENCES listings(id)
+                    ON DELETE CASCADE
+            );
+        """
+        cur.execute(create_purchases_table)
+
+        # ________________________________________________________
+        # WISHLIST TABLE (User wishlists)
+        # Added by Elali McNair 3/3/26
+        # The frontend protion of this code is not finished or implemented yet. Therfore, this code is not oporational or properly implemented yet.
+        # ________________________________________________________
+        create_wishlist_table = """
+            CREATE TABLE IF NOT EXISTS wishlist (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                listing_id INTEGER NOT NULL,
+                added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                CONSTRAINT fk_wishlist_user
+                    FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE,
+
+                CONSTRAINT fk_wishlist_listing
+                    FOREIGN KEY(listing_id)
+                    REFERENCES listings(id)
+                    ON DELETE CASCADE,
+
+                CONSTRAINT unique_user_listing_wishlist
+                    UNIQUE (user_id, listing_id)
+            );
+        """
+        cur.execute(create_wishlist_table)
+
         conn.commit()
 
-        print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, and listing_sizes tables are ready.")
+        print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, listing_sizes, purchases, and wishlist tables are ready.")
 
         cur.close()
         conn.close()
