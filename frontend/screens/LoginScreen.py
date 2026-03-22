@@ -1,5 +1,5 @@
 
-import os #Allows files to manage files, see directory paths, and read environment
+'''import os #Allows files to manage files, see directory paths, and read environment
 import psycopg2 #Allows for Python to manage PostgreSQL databases
 from flask import Flask, request, redirect, url_for, session, render_template_string #Flask turns scripts into web servers. "request" allows user input, "redirect" sends users to various pages depending on input, "url_for" provides URLs for redirected pages, "session" allows for users to not have to log in each time they are redirected, and "render_template_string" produces the layout of the webpage
 from werkzeug.security import generate_password_hash, check_password_hash #Werkzeug handles requests and responses between web servers and .security is the submodule for hashing and data protection.
@@ -84,7 +84,7 @@ def signup():
         return f"Signup Failed: {message} <a href='/signup'>Try again</a>"
     
     # Ensures username, email, and password are sent securely as a "POST" request to the database when submit button is pressed 
-    return '''
+    return 
         <form method="post"> 
             Username: <input type="text" name="username" required><br>
             Email: <input type="email" name="email" required><br>
@@ -92,7 +92,7 @@ def signup():
             <input type="submit" value="Sign Up">
         </form>
     '''
-
+'''
 #By Ryan Grimes on 2/2/2026
 @app.route('/login', methods=['GET', 'POST']) #A function for when the login button is clicked
 def login():
@@ -115,14 +115,14 @@ def login():
         #return "Invalid Credentials."
 
     # Ensures username and password are sent securely as a "POST" request to the database when submit button is pressed
-    return '''
+    return 
         <form method="post">
             Username: <input type="text" name="username"><br>
             Password: <input type="password" name="password"><br>
             <input type="submit" value="Login">
         </form>
     '''
-
+'''
 #By Ryan Grimes on 2/2/2026
 @app.route('/listings') # If a user was not properly logged in, they don't have access to the listing screen
 def listings():
@@ -145,3 +145,4 @@ def logout():
 #By Ryan Grimes on 2/2/2026
 if __name__ == "__main__": #Starts webpage
     app.run(debug=True, port=5000) #Flask engine listens on localhost: 5000 for visitors and provides error messages
+''
