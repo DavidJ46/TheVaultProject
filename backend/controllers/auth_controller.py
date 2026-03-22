@@ -1,17 +1,16 @@
-#By Ryan Grimes 2/27/2026
-#Routes login
-
-from flask import Blueprint, request, session, redirect, url_for #Flask turns scripts into web servers. 
+# By Ryan Grimes - Updated 3/19/2026
+from flask import Blueprint, request, session, redirect, url_for, render_template
 from services.auth_services import AuthService 
 from config.db import get_db_connection 
 
 auth_bp = Blueprint('auth', __name__)
 service = AuthService()
 
-@auth_bp.route('/login', methods=['POST']) #A function for when the login button is clicked
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-        user = request.form['username']
-        pw = request.form['password']
+    if request.method == 'POST':
+        user = request.form.get('username')
+        pw = request.form.get('password')
 
         conn = get_db_connection()
         success, role = service.validate_login(user, pw, conn)
@@ -19,43 +18,33 @@ def login():
         
         if success:
             session['user'] = user
-            session['role'] = role #Store role in the browser cookie
-            return redirect(url_for('listings'))
+            session['role'] = role
+            return redirect(url_for('auth.listings'))
         
-        return "Invalid Credentials."
+        return "Invalid Credentials. <a href='/auth/login'>Try again</a>"
+    
+    # If GET, show the login form (Needs login.html)
+    return render_template('login.html')
 
-@auth_bp.route('/signup', methods=['GET', 'POST']) #A function for when the signup button is clicked
+@auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST': #Submits inputted credentials to database when Submit button is clicked
-        user = request.form['username'] 
-        pw = request.form['password']
-        email = request.form['email']
+    if request.method == 'POST':
+        user = request.form.get('username') 
+        pw = request.form.get('password')
+        email = request.form.get('email')
 
-        success, message = auth_system.register_user(user, pw, email)
+        # Assuming register_user logic exists in your service
+        success, message = service.register_user(user, pw, email)
 
         if success:
-            return f"{message} <a href='/login'>Login here</a>" #Directs user to login screen if credentials aren't already in database
-        
-        return f"Signup Failed: {message} <a href='/signup'>Try again</a>"
+            return f"{message} <a href='/auth/login'>Login here</a>"
+        return f"Signup Failed: {message} <a href='/auth/signup'>Try again</a>"
     
-    # Ensures username, email, and password are sent securely as a "POST" request to the database when submit button is pressed 
-    return '''
-        <form method="post"> 
-            Username: <input type="text" name="username" required><br>
-            Email: <input type="email" name="email" required><br>
-            Password: <input type="password" name="password" required><br>
-            <input type="submit" value="Sign Up">
-        </form>
-    '''
+    return render_template('signup.html')
 
-@auth_bp.route('/listings') # If a user was not properly logged in, they don't have access to the listing screen
+@auth_bp.route('/listings')
 def listings():
     if 'user' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     
-    message = f"<h1>Marketplace Listings</h1><p>Hello {session['user']}, welcome to the Vault!</p>"
-
-    if session.get('role') == 'admin': 
-        message += "<p style='color:red;'><strong>ADMIN ACCESS GRANTED:</strong> You can delete any listing.</p>" #Admin has slightly different view
-    
-    return message
+    return f"<h1>Marketplace Listings</h1><p>Hello {session['user']}, welcome to the Vault!</p>"
