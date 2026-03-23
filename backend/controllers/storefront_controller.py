@@ -1,22 +1,23 @@
 # The Vault Campus Marketplace
 # CSC 405 Sp 26'
-# Created by Day Ekoi - Iteration 3
+# Created by Day Ekoi - Iteration 
+# Updated by Day Ekoi - Iteration 4 2/22/26
 
 """
 storefront_controller.py
 
-
-Purpose: Defines HTTP API endpoints for storefront actions.
+Purpose:
+Defines both storefront page routes and storefront API endpoints.
 
 Functions:
-- parse request input 
+- render storefront HTML pages
+- parse request input
 - get current_user
 - call service functions
-- retrun JSON responses 
+- return JSON responses
 """
- ############ THIS FILE NEEDS TO BE UPDATED ######################
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 
 from services.storefront_service import (
     create_storefront_service,
@@ -25,7 +26,13 @@ from services.storefront_service import (
     deactivate_storefront_service
 )
 
+from models.storefront_model import get_active_storefronts  # Updated by Day E 3/22/26
+
+# API blueprint
 storefront_bp = Blueprint("storefront_bp", __name__, url_prefix="/api/storefronts")
+
+# Page blueprint
+storefront_pages_bp = Blueprint("storefront_pages_bp", __name__)
 
 
 def get_current_user():
@@ -51,11 +58,47 @@ def get_current_user():
         return None
 
 
-# _________________________________________________________
-# CREATE STOREFRONT (User)
-# POST /api/storefronts
-# _________________________________________________________
+#_________________________________________________________
+# Page Routing
+#_________________________________________________________
 
+@storefront_pages_bp.route("/storefronts")
+def storefront_home_page():
+    return render_template("storefront.html")
+
+
+@storefront_pages_bp.route("/storefronts/create")
+def create_storefront_page():
+    return render_template("create_storefront.html")
+
+
+@storefront_pages_bp.route("/storefronts/my")
+def my_storefront_page():
+    return render_template("storefront.html")
+
+
+@storefront_pages_bp.route("/storefronts/<int:storefront_id>")
+def storefront_view_page(storefront_id):
+    return render_template("storefront.html", storefront_id=storefront_id)
+
+
+# ________________________________________________________
+# API Routing 
+#________________________________________________________
+
+# Get all active storefronts
+# GET /api/storefronts
+@storefront_bp.get("")
+def get_all_storefronts_route():
+    try:
+        storefronts = get_active_storefronts()
+        return jsonify(storefronts), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# Create Storefront
+# POST /api/storefronts
 @storefront_bp.post("")
 def create_storefront_route():
     current_user = get_current_user()
@@ -74,11 +117,8 @@ def create_storefront_route():
         return jsonify({"error": str(e)}), 400
 
 
-# _________________________________________________________
-# GET MY STOREFRONT (User)
+# Get my storefront
 # GET /api/storefronts/me
-# _________________________________________________________
-
 @storefront_bp.get("/me")
 def get_my_storefront_route():
     current_user = get_current_user()
@@ -94,10 +134,8 @@ def get_my_storefront_route():
         return jsonify({"error": str(e)}), 400
 
 
-# _________________________________________________________
-# UPDATE STOREFRONT (Owner/Admin)
+# Update storefront
 # PUT /api/storefronts/<storefront_id>
-# _________________________________________________________
 @storefront_bp.put("/<int:storefront_id>")
 def update_storefront_route(storefront_id):
     current_user = get_current_user()
@@ -118,11 +156,8 @@ def update_storefront_route(storefront_id):
         return jsonify({"error": str(e)}), 400
 
 
-# _________________________________________________________
-# DEACTIVATE STOREFRONT (Owner/Admin)
+# Deactivate storefront
 # PATCH /api/storefronts/<storefront_id>/deactivate
-# _________________________________________________________
-
 @storefront_bp.patch("/<int:storefront_id>/deactivate")
 def deactivate_storefront_route(storefront_id):
     current_user = get_current_user()
