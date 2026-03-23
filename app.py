@@ -5,7 +5,7 @@ from flask import Flask, render_template, redirect, url_for, session
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'backend'))) # Updated 3/19/2026 by Ryan Grimes
 
 from controllers.listing_controller import listing_bp
-from controllers.storefront_controller import storefront_bp
+from controllers.storefront_controller import storefront_bp, storefront_pages_bp  # Updated by Day E 3/22/26
 from controllers.purchase_controller import purchase_bp
 from controllers.wishlist_controller import wishlist_bp
 from controllers.admin_controller import admin_bp
@@ -43,6 +43,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(listing_bp)
     app.register_blueprint(storefront_bp)
+    app.register_blueprint(storefront_pages_bp)  # Updated by Day E 3/22/26
     app.register_blueprint(purchase_bp)
     app.register_blueprint(wishlist_bp)
     app.register_blueprint(admin_bp) # Updated 3/19/2026 by Ryan Grimes

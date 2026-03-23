@@ -40,18 +40,18 @@ What needs to be replaced later:
 
 // Storefront data structure:
 // storefront 1 placeholder
-const storefronts = [
+let storefronts = [
   {
     id: 1,
     name: "Nike",
     categories: ["Athleisure", "Casual"],
     items: 24,
-    logo: "images/nikelogo.png",
+    logo: "/static/images/nikelogo.png",
     images: [
-      "images/nikehoodie1.png",
-      "images/nikehoodie2.png",
-      "images/nikejacket.png",
-      "images/nikepants1.png"
+      "/static/images/nikehoodie1.png",
+      "/static/images/nikehoodie2.png",
+      "/static/images/nikejacket.png",
+      "/static/images/nikepants1.png"
     ]
   },
   // storefront 2 placeholder
@@ -60,9 +60,9 @@ const storefronts = [
     name: "Onyx",
     categories: ["Casual", "Retro"],
     items: 26,
-    logo: "images/onyxlogo.jpeg",
+    logo: "/static/images/onyxlogo.jpeg",
     images: [
-      "images/onyxhoodie.png",
+      "/static/images/onyxhoodie.png",
     ]
   },
   // storefront 3 placeholder
@@ -71,12 +71,12 @@ const storefronts = [
     name: "Essentials Fear of God",
     categories: ["Casual", "Streetwear"],
     items: 18,
-    logo: "images/essentialslogo.png",
+    logo: "/static/images/essentialslogo.png",
     images: [
-      "images/essentials1.png",
-      "images/essentials2.png",
-      "images/essentials3.png",
-      "images/essentials4.png"
+      "/static/images/essentials1.png",
+      "/static/images/essentials2.png",
+      "/static/images/essentials3.png",
+      "/static/images/essentials4.png"
     ]
   },
   // storefront 4 placeholder
@@ -85,12 +85,12 @@ const storefronts = [
     name: "Von Dutch",
     categories: ["Streetwear", "Accessories"],
     items: 10,
-    logo: "images/vondutchlogo.png",
+    logo: "/static/images/vondutchlogo.png",
     images: [
-      "images/vondutch1.png",
-      "images/vondutch2.png",
-      "images/vondutch3.png",
-      "images/vondutch4.png"
+      "/static/images/vondutch1.png",
+      "/static/images/vondutch2.png",
+      "/static/images/vondutch3.png",
+      "/static/images/vondutch4.png"
     ]
   }
 ];
@@ -123,24 +123,32 @@ function createCard(store) {
   const card = document.createElement("div"); // Created new element in memory
   card.className = "storefront-card"; // assigns the storefront-card class to the new element for styling purposes
 
+  const categories = Array.isArray(store.categories) ? store.categories : [];
+  const images = Array.isArray(store.images) && store.images.length > 0
+    ? store.images
+    : ["/static/images/placeholder-storefront.png"];
+
+  const logo = store.logo || "/static/images/placeholder-storefront.png";
+  const items = store.items ?? 0;
+
 
 // this function inserts the HTML strucutre for the storefront card
 
   card.innerHTML = `
     <div>
       <div class="storefront-header">
-        <img class="storefront-logo" src="${store.logo}">
+        <img class="storefront-logo" src="${logo}">
         <div>
           <h2 class="storefront-name">${store.name}</h2>
           <p class="storefront-meta">
-            ${store.categories.slice(0, 2).join(" • ")} • ${store.items} items
+            ${categories.slice(0, 2).join(" • ")}${categories.length > 0 ? " • " : ""}${items} items
           </p>
         </div>
       </div>
 
       <div class="carousel-shell">
         <button class="carousel-btn left">&#10094;</button>
-        <img class="carousel-image" src="${store.images[0]}">
+        <img class="carousel-image" src="${images[0]}">
         <button class="carousel-btn right">&#10095;</button>
       </div>
     </div>
@@ -156,20 +164,26 @@ function createCard(store) {
   const img = card.querySelector(".carousel-image");
   const left = card.querySelector(".left");
   const right = card.querySelector(".right");
+  const enterBtn = card.querySelector(".enter-btn");
 
 
 // Card Arrow button functionality 
 
 // left arrow functionality: once clicked the index variable is decremented by 1 and moves one image backwards in the array
   left.onclick = () => {
-    index = (index - 1 + store.images.length) % store.images.length;
-    img.src = store.images[index];
+    index = (index - 1 + images.length) % images.length;
+    img.src = images[index];
   };
 
 // right arrow functionality: once clicked, indec is incremeted by 1 and moves one image forward in the array 
   right.onclick = () => {
-    index = (index + 1) % store.images.length;
-    img.src = store.images[index];
+    index = (index + 1) % images.length;
+    img.src = images[index];
+  };
+
+  // Enter storefront routing
+  enterBtn.onclick = () => {
+    window.location.href = `/storefronts/${store.id}`;
   };
 
   return card; // returns the fully built card
@@ -181,11 +195,49 @@ function createCard(store) {
 this function loops through all storefrotn objects in the storefronts array, creates a card for each, and then inserts the cards into the storefront grid 
 */
 function renderStorefronts() {
+  if (!grid) return; // Updated by Day E 3/22/26
   grid.innerHTML = ""; // this clears the gird. Useful for if there needs to be re-rendering 
   storefronts.forEach(store => { // loops through each store object in the storefronts array
     const card = createCard(store); //creates a card for the current store object
     grid.appendChild(card); // inserts the created card into the storefront grid in the HTML
   });
+}
+
+
+/* FETCH STOREFRONTS FROM FLASK API
+
+This function requests storefront data from the Flask backend.
+If the backend returns storefront data successfully, it replaces the placeholder storefronts array.
+If the backend route is not ready yet or fails, the placeholder data will still be used.
+*/
+async function fetchStorefronts() {
+  try {
+    const response = await fetch("/api/storefronts");
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const storefrontArray = Array.isArray(data) ? data : [data]; // Updated by Day E 3/22/26
+
+    storefronts = storefrontArray.map(store => ({
+      id: store.id,
+      name: store.brand_name || "Unnamed Storefront",
+      categories: ["Vault Brand"], // Updated by Day E 3/22/26
+      items: 0, // Updated by Day E 3/22/26
+      logo: store.logo_url || "/static/images/placeholder-storefront.png",
+      images: [
+        store.banner_url || "/static/images/placeholder-storefront.png"
+      ]
+    }));
+
+    renderStorefronts();
+  } catch (error) {
+    console.error("Error fetching storefronts from Flask API:", error);
+    renderStorefronts(); // fallback to placeholder storefronts
+  }
 }
 
 // Navigation pane functionality 
@@ -195,19 +247,25 @@ const navPane = document.getElementById("navPane");
 const navOverlay = document.getElementById("navOverlay");
 
 // open menu
-menuBtn.addEventListener("click", () => {
-  navPane.classList.toggle("active");
-  navOverlay.classList.toggle("active");
-});
+if (menuBtn) { // Updated by Day E 3/22/26
+  menuBtn.addEventListener("click", () => {
+    navPane.classList.toggle("active");
+    navOverlay.classList.toggle("active");
+  });
+}
 
 // close when clicking overlay
-navOverlay.addEventListener("click", () => {
-  navPane.classList.remove("active");
-  navOverlay.classList.remove("active");
-});
+if (navOverlay) { // Updated by Day E 3/22/26
+  navOverlay.addEventListener("click", () => {
+    navPane.classList.remove("active");
+    navOverlay.classList.remove("active");
+  });
+}
 
 console.log(storefronts); // logs the storefronts array to the console for debugging purposes
 console.log(grid); // logs the storefront grid element to the console for debugging purposes
 
-/* Initial render of the storefront cards. This will display the storefronts on the page when it is first loaded. */
-renderStorefronts();
+/* Initial render of the storefront cards. This will display the storefronts on the page when it is first loaded. 
+fetchStorefronts(); */
+
+renderStorefronts(); // Updated by Day E 3/22/26
