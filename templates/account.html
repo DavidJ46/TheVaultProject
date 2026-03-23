@@ -53,7 +53,7 @@
             <span class="role-badge">{{ session['role'] if 'role' in session else 'USER' }}</span>
         </div>
         <div class="logout-section">
-            <a href="#" style="color: #ff4444; text-decoration: none;">LOGOUT</a>
+            <a href="{{ url_for('auth.logout')}}" style="color: #ff4444; text-decoration: none;">LOGOUT</a>
         </div>
     </div>
 

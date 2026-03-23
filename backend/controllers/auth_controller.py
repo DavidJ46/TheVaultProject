@@ -53,4 +53,8 @@ def listings():
     if 'user' not in session:
         return redirect(url_for('auth.login'))
     
-    return f"<h1>Marketplace Listings</h1><p>Hello {session['user']}, welcome to the Vault!</p>"
+@auth_bp('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('auth.login'))
+    
