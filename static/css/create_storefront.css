@@ -1,0 +1,234 @@
+/* 
+    create_storefront.css
+
+    The Vault Campus Marketplace 
+    CSC 405 Sp 26'
+    Created by Day Ekoi - Iteration 5
+    3/22/2026
+
+
+Description:
+This file controls the styling for the Create Storefront page.
+
+It follows the same visual style as the rest of the Vault platform:
+- dark background with image overlay
+- gold accent colors
+- glass-like cards
+- sharp metallic buttons
+
+This file works with:
+- create_storefront.html
+- create_storefront.js
+*/
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* page background */
+html, body {
+    min-height: 100%;
+}
+
+body {
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url("/static/images/background.png") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 30px;
+}
+
+
+/* header section */
+.create-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.brand-title {
+    font-size: 3rem;
+    font-weight: 800;
+}
+
+.gold {
+    color: #D4AF37;
+}
+
+.brand-subtitle {
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+.page-title {
+    margin-top: 10px;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+}
+
+
+/* main page layout */
+.create-page {
+    display: flex;
+    justify-content: center;
+}
+
+
+/* form container */
+.storefront-form {
+    width: 100%;
+    max-width: 900px;
+}
+
+
+/* reusable card styling */
+.form-card {
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(184, 134, 11, 0.6);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+
+/* labels */
+.section-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #B8860B;
+}
+
+.required {
+    color: #ff4d4d;
+}
+
+
+/* inputs */
+input[type="text"],
+textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(184, 134, 11, 0.5);
+    padding: 12px;
+    color: white;
+    outline: none;
+}
+
+input:focus,
+textarea:focus {
+    border-color: #B8860B;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+/* middle layout (logo + inputs) */
+.middle-row {
+    display: flex;
+    gap: 20px;
+}
+
+.logo-card {
+    flex: 1;
+}
+
+.info-column {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+/* bottom layout */
+.bottom-row {
+    display: flex;
+    gap: 20px;
+}
+
+.category-card {
+    flex: 1;
+}
+
+.preview-card {
+    flex: 1;
+}
+
+
+/* category grid */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.category-grid label {
+    font-size: 0.9rem;
+}
+
+
+/* helper text */
+.helper-text {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+}
+
+
+/* buttons */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+
+/* primary button (match signup + storefront) */
+.primary-btn {
+    background: linear-gradient(145deg, #B8860B, #8B6508);
+    border: none;
+    padding: 14px 24px;
+    color: black;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+.primary-btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}
+
+
+/* secondary button */
+.secondary-btn {
+    background: transparent;
+    border: 1px solid #B8860B;
+    color: #B8860B;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+.secondary-btn:hover {
+    background: #B8860B;
+    color: black;
+}
+
+
+/* responsive */
+@media (max-width: 768px) {
+    .middle-row,
+    .bottom-row {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,213 @@
+<!--
+ create_storefront.html
+
+    The Vault Campus Marketplace 
+    CSC 405 Sp 26'
+    Created by Day Ekoi - Iteration 5
+    3/22/2026
+
+
+This file is the Create Storefront page where users create their storefronts using a form based UI 
+
+Users can:
+- Upload a storefront banner image
+- Upload a logo
+- Enter brand name and contact information
+- Provide a description of their store
+- Select storefront categories
+- Upload preview images for their storefront
+
+This page is rendered using Flask and connects to the static CSS and JS files.
+
+This doesnt do this rn. But it will be updated so this form will submit data to the backend (Flask API) where the storefront will be stored
+in the database and then displayed dynamically on the homepage.
+
+This file acts as the UI structure (skeleton) of the Create Storefront feature.
+-->
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+    <!-- Metadata stuff -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Page title shown in browser tab -->
+    <title>Create Storefront</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create_storefront.css') }}">
+
+</head>
+
+
+
+
+<body> 
+<!-- Start of main body code -->
+
+    <!-- Header -->
+    <header class="create-header">
+        <div class="brand-block">
+            <h1 class="brand-title">
+                <span class="gold">The</span> Vault
+            </h1>
+            <p class="brand-subtitle">Fashion Marketplace</p>
+        </div>
+
+        <h2 class="page-title">Create Storefront</h2>
+    </header>
+
+
+    <!-- Main container -->
+    <main class="create-page">
+
+        <form class="storefront-form" id="storefrontForm" enctype="multipart/form-data">
+
+            <!-- banner -->
+            <section class="form-card banner-card">
+                <label for="bannerUpload" class="section-label">
+                    Store Banner
+                </label>
+                <input type="file" id="bannerUpload" name="banner" accept="image/*">
+            </section>
+
+
+
+
+            <!-- logo + info 
+             will add a box later that will show the file added -->
+            <section class="middle-row">
+
+                <div class="form-card logo-card">
+                    <label for="logoUpload" class="section-label">
+                        Store Logo <span class="required">*</span>
+                    </label>
+                    <input type="file" id="logoUpload" name="logo" accept="image/*" required>
+                </div>
+
+                <div class="info-column">
+
+                    <div class="form-card input-card">
+                        <label for="brandName" class="section-label">
+                            Brand Name <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="brandName" 
+                            name="brand_name" 
+                            placeholder="Enter brand name"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-card input-card">
+                        <label for="contactInfo" class="section-label">
+                            Instagram / Contact Info <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="contactInfo" 
+                            name="contact_info" 
+                            placeholder="@brandname or email"
+                        >
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+
+            <!-- description -->
+            <section class="form-card description-card">
+
+                <label for="storeDescription" class="section-label">
+                    Store Description <span class="required">*</span>
+                </label>
+
+                <textarea 
+                    id="storeDescription" 
+                    name="description" 
+                    rows="5"
+                    placeholder="Describe your brand, what you sell, your style, and your target audience."
+                    required
+                ></textarea>
+
+            </section>
+
+
+
+
+            <!-- categories + preview -->
+            <section class="bottom-row">
+
+                <div class="form-card category-card">
+
+                    <p class="section-label">Store Categories</p>
+
+                    <div class="category-grid">
+                        <label><input type="checkbox" name="categories" value="Streetwear"> Streetwear</label>
+                        <label><input type="checkbox" name="categories" value="Casual"> Casual</label>
+                        <label><input type="checkbox" name="categories" value="Vintage"> Vintage</label>
+                        <label><input type="checkbox" name="categories" value="Earthy"> Earthy</label>
+                        <label><input type="checkbox" name="categories" value="Athleisure"> Athleisure</label>
+                        <label><input type="checkbox" name="categories" value="Retro"> Retro</label>
+                        <label><input type="checkbox" name="categories" value="Accessories"> Accessories</label>
+                        <label><input type="checkbox" name="categories" value="Other"> Other</label>
+                    </div>
+
+                </div>
+
+
+                <div class="form-card preview-card">
+
+                    <label for="previewImages" class="section-label">
+                        Storefront Preview Images (Max 4) <span class="required">*</span>
+                    </label>
+
+                    <input 
+                        type="file" 
+                        id="previewImages" 
+                        name="preview_images" 
+                        accept="image/*" 
+                        multiple
+                    >
+
+                    <p class="helper-text">
+                        Upload up to 4 images that will appear on your storefront preview. <span class="required">*</span>
+                    </p>
+
+                </div>
+
+            </section>
+
+
+
+
+            <!-- buttons -->
+            <section class="form-actions">
+
+                <button type="submit" class="primary-btn">
+                    Create Storefront
+                </button>
+
+                <button type="button" class="secondary-btn" id="cancelBtn">
+                    Cancel
+                </button>
+
+            </section>
+
+        </form>
+    </main>
+
+
+
+
+    <!-- javascript -->
+    <script src="{{ url_for('static', filename='js/create_storefront.js') }}"></script>
+
+</body>
+</html>

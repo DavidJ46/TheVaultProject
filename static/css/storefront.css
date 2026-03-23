@@ -1,24 +1,25 @@
-/*
+/* 
     storefront.css
 
-    The Vault Campus Marketplace 
+    The Vault Campus Marketplace
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4
     3/18/2026-3/22/2026
 
-
-Description:
-The purpose of this file is to control the style and layout of the storefront homepage. Responsible for page background styles, top nav bar, branding, search bar
-storefront cards (grid & layout), image area, and page controls. Its overall purpose is to make the storefront page visually organized and responsive
+Description: 
+The purpose of this file is to control the style and layout of the storefront homepage.
+Responsible for page background styles, top nav bar, branding, search bar storefront cards (grid & layout), image area, and page controls. Its overall purpose is to
+make the storefront page visually organized and responsive
 
 This file works hand in hand with:
-- storefront.html 
+- storefront.html
 - storefront.js
 
 Overall it does 4 major things:
 1. Sets the theme by setting background, gold color, white text, and font styles for the page
 2. Layout: organizes the top nav bar, title/search area, and storefront cards
-3. Styling of storefront cards including background, borders, spacing, and hover effects. it also ensures that each card looks correct once a storefront is created and it is added
+3. Styling of storefront cards including background, borders, spacing, and hover effects.
+it also ensures that each card looks correct once a storefront is created and it is added
 4. Styling of the carousel within the storefront cards, including image size and carousel button styles
 */
 
@@ -30,418 +31,363 @@ Overall it does 4 major things:
 }
 
 
-/*Styling for the entire page body, including background color, text color, and font */
+/* Styling for the entire page body, including background color, text color, and font */
+html, body {
+    min-height: 100%;
+}
+
 body {
-    background-color: #2e2e2e;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.58)),
+        url("/static/images/background.png") no-repeat center center fixed;
+    background-size: cover;
     color: white;
     font-family: Arial, Helvetica, sans-serif;
 }
 
 
-/* Original top nav bar */
-
-/*
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.2rem 2rem 0.5rem;
-}
-*/
-
-
-/* New top nav bar with updated spacing and structure to accommodate new SVG icons and future interactivity (like dropdown menu if wanted) */
-
-/* updated layout of the top bar, mainly spacing and padding so the icons arent practically kissing */
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.2rem 2.8rem 0.75rem 2.2rem;
-}
-
-
-/* Original icon button styling using emojis as placeholders */
-
-/*
-.icon-btn {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.9rem;
-    cursor: pointer;
-}
-*/
-
-/* New Icon button styling */
-
-/* base styling for all icon buttons (menu + bag). removed font-size since we are no longer using emojis */
-.icon-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: white;
-}
-
-
-/* styling for right side of top nav bar, which contains the cart/bag and profile icons */
-.topbar-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem; /* increased spacing between icons so they arent stuck together */
-    margin-right: 0.25rem;
-}
-
-
-/* Updated Menu Button*/
-
-/* container for hamburger menu button */
-.menu-btn {
-    width: 42px;
-    height: 42px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-}
-
-/* each individual line in the hamburger menu */
-.menu-line {
-    width: 24px;
-    height: 2.5px;
-    background-color: white;
-    border-radius: 999px;
-}
-
-
-/* Added Bag/Cart button  */
-
-/* styling for the shopping bag icon button */
-.bag-btn {
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #f1f1f1;
-    transition: transform 0.2s ease, color 0.2s ease;
-}
-
-/* hover effect for bag icon */
-.bag-btn:hover {
-    transform: translateY(-1px);
-    color: #d4af37; /* gold hover to match theme */
-}
-
-/* controls size of svg icon inside bag button */
-.topbar-svg {
-    width: 42px;
-    height: 42px;
-}
-
-
-/* New Profile icon: replaced the person emoji intended as a placeholder for account */
-
-/* base styling for profile button */
-.profile-btn {
-    background: transparent;
-    border: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* circular profile which storefront logo style */
-.profile-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #d4af37;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-}
-
-/* hover effect for profile button */
-.profile-avatar:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
-}
-
-/* size of the profile icon inside */
-.profile-svg {
-    width: 24px;
-    height: 24px;
-}
-
-
-/* styling for the logo and search section */
-.logo-search-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* main title styling */
-.brand-title {
-    font-size: 4rem;
-    font-weight: 800;
-}
-
-/* gold accent color */
-.gold {
-    color: #d4af37;
-}
-
-/* subtitle styling */
-.brand-subtitle {
-    margin-top: -6px;
-    font-size: 1.5rem;
-    font-style: italic;
-}
-
-/* search wrapper */
-.search-wrap {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-/* search input styling */
-.search-input {
-    width: 100%;
-    max-width: 700px;
-    background: #0f0f0f;
-    color: white;
-    border: none;
-    border-radius: 999px;
-    padding: 1rem;
-    text-align: center;
-}
-
-
-/* main content container */
-.page-content {
-    width: min(1300px, 92%);
-    margin: 2.5rem auto;
-}
-
-/* storefront grid layout */
-.storefront-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-}
-
-
-/* storefront card styling */
-.storefront-card {
-    background: #3b3b3b;
-    border: 3px solid #ffffff;
-    border-radius: 24px;
-    padding: 1.5rem;
-    min-height: 480px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* hover effect */
-.storefront-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-}
-
-/* header section of card */
-.storefront-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* storefront logo */
-.storefront-logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: white;
-    border: 2px solid #d4af37;
-}
-
-/* storefront name */
-.storefront-name {
-    font-size: 2rem;
-    font-weight: 800;
-}
-
-/* meta text */
-.storefront-meta {
-    margin-top: 0.3rem;
-    font-size: 0.9rem;
-    color: #cccccc;
-}
-
-
-/* carousel container */
-.carousel-shell {
-    position: relative;
-    margin: 1rem 0;
-}
-
-/* image styling */
-.carousel-image {
-    width: 100%;
-    height: 270px;
-    object-fit: cover;
-    border-radius: 18px;
-}
-
-/* carousel buttons */
-.carousel-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0,0,0,0.6);
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-/* left arrow */
-.left {
-    left: 10px;
-}
-
-/* right arrow */
-.right {
-    right: 10px;
-}
-
-
-/* footer button container */
-.storefront-footer {
-    display: flex;
-    justify-content: center;
-}
-
-/* enter storefront button */
-.enter-btn {
-    background: #d4af37;
-    color: black;
-    border: none;
-    border-radius: 999px;
-    padding: 0.75rem 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-
-/* pagination section */
-.pagination {
-    margin-top: 2rem;
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-/* pagination buttons */
-.page-btn {
-    background: black;
-    color: white;
-    border: 1px solid #d4af37;
-    border-radius: 999px;
-    padding: 0.5rem 1rem;
-}
-
-/* NAV OVERLAY (dark background when menu opens) */
+/* Overlay for dimming the page when nav is open */
 .nav-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    background: rgba(0,0,0,0.5);
-
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
     opacity: 0;
-    pointer-events: none;
-    transition: 0.3s;
+    visibility: hidden;
+    transition: 0.25s ease;
+    z-index: 20;
 }
 
-/* active state */
 .nav-overlay.active {
     opacity: 1;
-    pointer-events: all;
+    visibility: visible;
 }
 
 
-/* Navigation Panel/Menu
-! Note to self: Add borders to button, make it a lil bigger, make border lines bigger, space it out, add the vault logo and branding or sum at the top */
+/* Side navigation pane/menu */
 .nav-pane {
     position: fixed;
     top: 0;
-    left: -320px; /* hidden off screen */
+    left: -320px;
     width: 300px;
-    height: 100%;
-
-    background: #f2f2f2;
-    color: black;
-
-    padding: 3rem;
-    transition: 0.3s;
-    z-index: 1000;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.92); /* Updated by Day E 3/22/26 */
+    border-right: 1px solid #B8860B;
+    padding: 30px 22px 24px 22px; /* Updated by Day E 3/22/26 */
+    z-index: 30;
+    transition: left 0.3s ease;
+    overflow-y: auto; /* Updated by Day E 3/22/26 */
 }
 
-/* when open */
 .nav-pane.active {
     left: 0;
 }
 
 
-/* Top Create Storefront button */
+/* Top half button and actions */
+.nav-top {
+    margin-bottom: 28px;
+}
+
+
+/* Metallic button styling */
+.create-btn,
+.enter-btn,
+.page-btn {
+    background: linear-gradient(145deg, #B8860B, #8B6508);
+    color: black;
+    border: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 2px; /* Updated by Day E 3/22/26 */
+}
+
+.create-btn:hover,
+.enter-btn:hover,
+.page-btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}
+
 .create-btn {
     width: 100%;
-    padding: 0.9rem;
-    border-radius: 16px;
-
-    background: #d4af37;
-    border: 3px solid #000000;
-    font-weight: bold;
-    margin-bottom: 1rem;
+    padding: 14px 16px;
 }
 
-/* Nav items: Explore Brands, All Categories, New Drops, Hot! */
-.nav-item {
+
+/* Main navigation */
+.nav-section {
     display: flex;
-    font-weight: bold;
-    justify-content: space-between;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid #ccc;
-    cursor: pointer;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
 }
 
+.nav-item {
+    color: white;
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: flex; /* Updated by Day E 3/22/26 */
+    justify-content: space-between; /* Updated by Day E 3/22/26 */
+    align-items: center; /* Updated by Day E 3/22/26 */
+    padding: 4px 0; /* Updated by Day E 3/22/26 */
+}
 
-/* more items the bottom ones: more from the vault, about, FAQs, Sitemap */
-.nav-section.more {
-    margin-top: 1.5rem;
+.nav-item:hover {
+    color: #B8860B;
 }
 
 .nav-heading {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+    color: rgba(204, 178, 128, 0.75); /* Updated by Day E 3/22/26 */
+    font-size: 0.95rem; /* Updated by Day E 3/22/26 */
+    margin-bottom: 12px; /* Updated by Day E 3/22/26 */
 }
 
 .nav-subitem {
-    padding: 0.4rem 0;
+    color: white; /* Updated by Day E 3/22/26 */
+    margin-bottom: 10px; /* Updated by Day E 3/22/26 */
+    cursor: pointer; /* Updated by Day E 3/22/26 */
+}
+
+.nav-subitem:hover {
+    color: #B8860B; /* Updated by Day E 3/22/26 */
+}
+
+
+/* Updated nav bar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 42px;
+    padding: 6px 4px; /* Updated by Day E 3/22/26 */
+}
+
+.topbar-actions {
+    display: flex; /* Updated by Day E 3/22/26 */
+    align-items: center; /* Updated by Day E 3/22/26 */
+    gap: 18px; /* Updated by Day E 3/22/26 */
+}
+
+
+/* Hamburger menu */
+.menu-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Updated by Day E 3/22/26 */
+    gap: 6px;
+    width: 46px; /* Updated by Day E 3/22/26 */
+    height: 46px; /* Updated by Day E 3/22/26 */
+    background: transparent; /* Updated by Day E 3/22/26 */
+    border: none; /* Updated by Day E 3/22/26 */
+    cursor: pointer; /* Updated by Day E 3/22/26 */
+}
+
+.menu-line {
+    width: 30px; /* Updated by Day E 3/22/26 */
+    height: 3px; /* Updated by Day E 3/22/26 */
+    background: white;
+    border-radius: 2px; /* Updated by Day E 3/22/26 */
+}
+
+
+/* Bag icon */
+.bag-btn {
+    width: 42px; /* Updated by Day E 3/22/26 */
+    height: 42px; /* Updated by Day E 3/22/26 */
+    display: flex; /* Updated by Day E 3/22/26 */
+    color: white;
+    align-items: center; /* Updated by Day E 3/22/26 */
+    justify-content: center; /* Updated by Day E 3/22/26 */
+    background: transparent; /* Updated by Day E 3/22/26 */
+    border: none; /* Updated by Day E 3/22/26 */
+    cursor: pointer; /* Updated by Day E 3/22/26 */
+}
+
+.topbar-svg {
+    width: 30px; /* Updated by Day E 3/22/26 */
+    height: 30px; /* Updated by Day E 3/22/26 */
+    stroke: white; /* Updated by Day E 3/22/26 */
+    fill: white;
+    color: white;
+}
+
+
+/* Profile button */
+.profile-btn {
+    background: transparent; /* Updated by Day E 3/22/26 */
+    border: none; /* Updated by Day E 3/22/26 */
+    cursor: pointer; /* Updated by Day E 3/22/26 */
+}
+
+.profile-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid #D4AF37;
+    background: white;
+    display: flex; /* Updated by Day E 3/22/26 */
+    align-items: center; /* Updated by Day E 3/22/26 */
+    justify-content: center; /* Updated by Day E 3/22/26 */
+}
+
+.profile-svg {
+    width: 28px; /* Updated by Day E 3/22/26 */
+    height: 28px; /* Updated by Day E 3/22/26 */
+    stroke: #4d4d4d; /* Updated by Day E 3/22/26 */
+}
+
+
+/* Brand/logo/title and search area */
+.logo-search-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.brand-title {
+    font-size: 4rem;
+    font-weight: 800;
+}
+
+.gold {
+    color: #D4AF37;
+}
+
+.brand-subtitle {
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(0, 0, 0, 0.82);
+    border: 1px solid #B8860B;
+    padding: 16px;
+    color: white;
+    border-radius: 999px;
+    text-align: center;
+}
+
+
+/* Main page content */
+.page-content {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+
+/* Storefront card grid */
+.storefront-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Updated by Day E 3/22/26 */
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* Individual storefront card */
+.storefront-card {
+    background: rgba(0, 0, 0, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 26px;
+    padding: 26px;
+    min-height: 520px; /* Updated by Day E 3/22/26 */
+    transition: transform 0.22s ease;
+}
+
+.storefront-card:hover {
+    transform: translateY(-3px);
+}
+
+
+/* Card header */
+.storefront-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.storefront-logo {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 2px solid #D4AF37;
+}
+
+.storefront-name {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.storefront-meta {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+
+/* Carousel */
+.carousel-shell {
+    position: relative;
+    margin-top: 16px;
+    margin-bottom: 22px;
+    padding: 12px 0;
+}
+
+.carousel-image {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: black;
+    color: white;
+    border: none;
     cursor: pointer;
+}
+
+.carousel-btn.left { left: 10px; }
+.carousel-btn.right { right: 10px; }
+
+
+/* Footer button */
+.storefront-footer {
+    text-align: center;
+}
+
+.enter-btn {
+    padding: 14px 30px;
+    border-radius: 2px; /* Updated by Day E 3/22/26 */
+}
+
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 34px;
+}
+
+.page-indicator {
+    font-size: 1.2rem;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+    .storefront-grid {
+        grid-template-columns: 1fr; /* Updated by Day E 3/22/26 */
+    }
 }
