@@ -42,6 +42,12 @@ def signup():
     
     return render_template('signup.html')
 
+@auth_bp.route('/account')
+def account():
+    if 'user' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('account.html')
+
 @auth_bp.route('/listings')
 def listings():
     if 'user' not in session:

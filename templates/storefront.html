@@ -132,8 +132,28 @@ Updated nav bar
 
     <!-- Right-side actions -->
     <div class="topbar-actions">
+    
+    <!--Shopping bag button -->
+      <a href="{{ url_for('cart') }}" class="icon-btn bag-btn" aria-label="View shopping bag" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+        <svg viewBox="0 0 24 24" class="topbar-svg" aria-hidden="true">
+          <path
+            d="M6 8h12l-1 11H7L6 8Z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M9 8V6a3 3 0 0 1 6 0v2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
 
-      <!-- Shopping bag button -->
+      <!-- Shopping bag button 
       <button class="icon-btn bag-btn" aria-label="View shopping bag">
         <svg viewBox="0 0 24 24" class="topbar-svg" aria-hidden="true">
           <path
@@ -151,7 +171,7 @@ Updated nav bar
             stroke-linecap="round"
           />
         </svg>
-      </button>
+      </button> -->
 
       <!-- Profile button -->
       <button class="profile-btn" aria-label="View account">
