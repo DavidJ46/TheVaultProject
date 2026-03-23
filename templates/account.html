@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vault | Account Console</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/storefront.css') }}">
+    <style>
+        :root { --gold: #B8860B; --dark-bg: #121212; }
+        
+        body { background-color: #000; color: white; font-family: 'Segoe UI', sans-serif; }
+
+        .account-container {
+            max-width: 1000px; margin: 50px auto; padding: 20px;
+            background: rgba(18, 18, 18, 0.9); border: 1px solid var(--gold);
+        }
+
+        .profile-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--gold); padding-bottom: 20px; margin-bottom: 30px;
+        }
+
+        .user-meta h1 { margin: 0; color: var(--gold); letter-spacing: 2px; }
+        .role-badge { 
+            background: var(--gold); color: black; padding: 2px 10px; 
+            font-size: 0.8rem; font-weight: bold; text-transform: uppercase; 
+        }
+
+        /* Tabs Styling */
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; }
+        .tab-link {
+            padding: 10px 20px; cursor: pointer; background: none; border: none;
+            color: #888; text-transform: uppercase; transition: 0.3s;
+        }
+        .tab-link.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+        .tab-content { display: none; padding: 20px; background: #1a1a1a; min-height: 200px; }
+        .tab-content.active { display: block; }
+
+        .empty-state { color: #555; text-align: center; padding-top: 50px; font-style: italic; }
+        
+        .back-btn { color: var(--gold); text-decoration: none; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="account-container">
+    <a href="{{ url_for('storefront_pages_bp.my_storefront_page') }}" class="back-btn">← BACK TO STOREFRONT</a>
+    
+    <div class="profile-header">
+        <div class="user-meta">
+            <h1>{{ session['user'] if 'user' in session else 'OPERATOR' }}</h1>
+            <span class="role-badge">{{ session['role'] if 'role' in session else 'USER' }}</span>
+        </div>
+        <div class="logout-section">
+            <a href="#" style="color: #ff4444; text-decoration: none;">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="tab-menu">
+        <button class="tab-link active" onclick="openTab(event, 'listings')">My Listings</button>
+        <button class="tab-link" onclick="openTab(event, 'wishlist')">Wishlist</button>
+        <button class="tab-link" onclick="openTab(event, 'purchases')">Purchases</button>
+        <button class="tab-link" onclick="openTab(event, 'sales')">Sales History</button>
+    </div>
+
+    <div id="listings" class="tab-content active">
+        <h3>YOUR CREATED LISTINGS</h3>
+        <p class="empty-state">No active listings found in the vault.</p>
+    </div>
+
+    <div id="wishlist" class="tab-content">
+        <h3>SECURED WISHLIST</h3>
+        <p class="empty-state">Your wishlist is currently empty.</p>
+    </div>
+
+    <div id="purchases" class="tab-content">
+        <h3>PURCHASE HISTORY</h3>
+        <p class="empty-state">No transaction records found.</p>
+    </div>
+
+    <div id="sales" class="tab-content">
+        <h3>SALES HISTORY</h3>
+        <p class="empty-state">No items sold yet.</p>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+</script>
+
+</body>
+</html>
