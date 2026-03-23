@@ -19,7 +19,7 @@ def login():
         if success:
             session['user'] = user
             session['role'] = role
-            return redirect(url_for('auth.listings'))
+            return redirect(url_for('storefront'))
         
         return "Invalid Credentials. <a href='/auth/login'>Try again</a>"
     

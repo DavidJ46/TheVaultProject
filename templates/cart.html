@@ -1,0 +1,88 @@
+<!-- Created 3/22/2026 by Ryan Grimes-->  
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vault | Your Cart</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; min-height: 100%; width: 100%;
+            background: #000; font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+
+        .vault-wrapper {
+            position: relative;
+            width: 100vw; min-height: 100vh;
+            background: url('/static/images/background.png') no-repeat center center fixed;
+            background-size: cover;
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 5vh;
+        }
+
+        .cart-container {
+            width: 90%; max-width: 800px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #B8860B;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(184, 134, 11, 0.3);
+        }
+
+        .cart-header {
+            border-bottom: 1px solid rgba(184, 134, 11, 0.5);
+            padding-bottom: 20px; margin-bottom: 30px;
+        }
+
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .item-details h4 { margin: 0; letter-spacing: 1px; }
+        .item-details p { color: #B8860B; margin: 5px 0 0; }
+
+        .cart-summary {
+            margin-top: 40px; text-align: right;
+        }
+
+        .total-price { font-size: 3vh; color: #B8860B; font-weight: bold; }
+
+        .checkout-btn {
+            background: #B8860B; color: black; border: none;
+            padding: 15px 40px; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .checkout-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+
+        .btn-back { color: rgba(204, 178, 128, 0.6); text-decoration: none; font-size: 1.4vh; display: block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="vault-wrapper">
+        <div class="cart-container">
+            <a href="/storefront" class="btn-back">← CONTINUE SHOPPING</a>
+            <div class="cart-header">
+                <h1 style="letter-spacing: 3px; margin: 0;">YOU LIKE WHAT YOU SEE?</h1>
+            </div>
+
+            <div class="cart-item">
+                <div class="item-details">
+                    <h4>VAULT HOODIE - V1</h4>
+                    <p>SIZE: LARGE | QTY: 1</p>
+                </div>
+                <div class="item-price">$186.80</div>
+            </div>
+
+            <div class="cart-summary">
+                <div style="font-size: 1.2vh; color: rgba(255,255,255,0.5);">ESTIMATED TOTAL</div>
+                <div class="total-price">$186.80</div>
+                <button class="checkout-btn">Initialize Checkout</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

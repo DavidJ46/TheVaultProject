@@ -1,6 +1,6 @@
 import sys
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, session
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'backend'))) # Updated 3/19/2026 by Ryan Grimes
 
@@ -23,6 +23,21 @@ def create_app():
     @app.route('/')
     def index():
         return render_template('index.html')
+
+    # Route to the main storefront page after login - Updated 3/22/2026
+    @app.route('/storefront')
+    def storefront():
+        return render_template('storefront.html')
+
+    # Route to the "Create Storefront" form - Updated 3/22/2026
+    @app.route('/create-storefront')
+    def create_storefront():
+        return render_template('create_storefront.html')
+
+    #Route to the Cart screen - Updated 3/22/2026
+    @app.route('/cart')
+    def cart():
+        return render_template('cart.html')
 
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
