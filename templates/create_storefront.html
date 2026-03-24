@@ -37,12 +37,12 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
     <!-- Page title shown in browser tab -->
     <title>Create Storefront</title>
 
-    <!-- live server version -->
-    <link rel="stylesheet" href="./create_storefront.css">
+    <!-- live server version 
+    <link rel="stylesheet" href="./create_storefront.css"> -->
 
-    <!-- flask version (needed for later)
+     <!-- flask version (needed for later) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/create_storefront.css') }}">
-    -->
+    
 
 </head>
 
@@ -73,7 +73,7 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
             <!-- banner -->
             <section class="form-card banner-card">
                 <label for="bannerUpload" class="section-label">
-                    Store Banner
+                    Upload Store Banner Image
                 </label>
                 <input type="file" id="bannerUpload" name="banner" accept="image/*">
             </section>
@@ -87,7 +87,7 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
 
                 <div class="form-card logo-card">
                     <label for="logoUpload" class="section-label">
-                        Store Logo <span class="required">*</span>
+                        Upload Store Logo <span class="required">*</span>
                     </label>
                     <input type="file" id="logoUpload" name="logo" accept="image/*" required>
                 </div>
@@ -151,7 +151,7 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
 
                 <div class="form-card category-card">
 
-                    <p class="section-label">Store Categories</p>
+                    <p class="section-label"> Enter Store Categories</p>
 
                     <div class="category-grid">
                         <label><input type="checkbox" name="categories" value="Streetwear"> Streetwear</label>
@@ -182,7 +182,7 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
                     >
 
                     <p class="helper-text">
-                        Upload up to 4 images that will appear on your storefront preview. <span class="'required">*</span>
+                        Upload up to 4 images that will appear on your storefront preview.
                     </p>
 
                 </div>
@@ -213,12 +213,12 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
 
     <!-- javascript -->
 
-    <!-- live server version -->
-    <script src="./create_storefront.js"></script>
+    <!-- live server version 
+    <script src="./create_storefront.js"></script> -->
 
-    <!-- flask version (for later use)
+    <!-- flask version (for later use) -->
     <script src="{{ url_for('static', filename='js/create_storefront.js') }}"></script>
-    -->
+
 
 </body>
 </html>

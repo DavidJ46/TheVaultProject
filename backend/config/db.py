@@ -8,7 +8,7 @@ from dotenv import load_dotenv #Loads the keys from the hidden .env file
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '../../.env'))
 
-def get_db_connection():
+def get_connection():
     try: 
         conn = psycopg2.connect(
             host=os.getenv('DB_HOST'), #The web address of the database server
