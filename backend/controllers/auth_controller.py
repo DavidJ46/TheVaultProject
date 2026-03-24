@@ -36,14 +36,11 @@ def signup():
         pw = request.form.get('password')
         email = request.form.get('email')
 
-<<<<<<< HEAD
         conn = get_db_connection()
-=======
         conn = get_connection()
         if conn is None:
             return "Database connection failed. <a href='/auth/signup'>Try again</a>"
 
->>>>>>> 5dbac07ab461fcfdc020da56b7cea06335e3fcca
         success, message = service.register_user(user, pw, email, conn)
         conn.close()
 
