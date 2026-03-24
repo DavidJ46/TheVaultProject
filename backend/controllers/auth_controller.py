@@ -54,6 +54,12 @@ def listings():
     if 'user' not in session:
         return redirect(url_for('auth.login'))
     return render_template('storefront.html')
+
+@auth_bp.route('/account')
+def account():
+    if 'user' not in session: 
+        return redirect(url_for('auth.login'))
+    return render_template('account.html')
     
 @auth_bp.route('/logout')
 def logout():
