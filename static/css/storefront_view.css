@@ -17,8 +17,8 @@ Works with:
 - storefront_view.js
 */
 
-
-* {
+/*
+{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -26,6 +26,8 @@ Works with:
 
 
 /* page base: background, font, and text color */
+
+/*
 html, body {
     min-height: 100%;
 }
@@ -42,7 +44,7 @@ body {
 }
 
 
-/* main wrapper */
+/* main wrapper 
 .storefront-view-page {
     width: min(1280px, 94%);
     margin: 0 auto;
@@ -50,14 +52,14 @@ body {
 }
 
 
-/* top section: holds banner area and overlapping logo */
+/* top section: holds banner area and overlapping logo 
 .storefront-top {
     position: relative;
     margin-bottom: 6.5rem;
 }
 
 
-/* banner box */
+/* banner box 
 .storefront-banner {
     width: 100%;
     min-height: 280px;
@@ -73,7 +75,7 @@ body {
 }
 
 
-/* back button */
+/* back button 
 .back-btn {
     position: absolute;
     left: 1.4rem;
@@ -93,7 +95,7 @@ body {
 }
 
 
-/* wrap for banner text */
+/* wrap for banner text 
 .banner-text-wrap {
     text-align: center;
     width: 100%;
@@ -101,7 +103,7 @@ body {
 }
 
 
-/* brand name at top of banner */
+/* brand name at top of banner 
 .brand-name {
     font-size: 3.5rem;
     font-weight: 800;
@@ -110,7 +112,7 @@ body {
 }
 
 
-/* banner title text */
+/* banner title text 
 .banner-title {
     font-size: 4.1rem;
     font-weight: 800;
@@ -120,14 +122,14 @@ body {
 }
 
 
-/* contact info in banner */
+/* contact info in banner 
 .contact-info {
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.8);
 }
 
 
-/* overlapping logo */
+/* overlapping logo 
 .storefront-logo {
     position: absolute;
     left: 2rem;
@@ -147,7 +149,7 @@ body {
 }
 
 
-/* logo text */
+/* logo text 
 .storefront-logo p {
     font-size: 2rem;
     font-weight: 800;
@@ -155,7 +157,7 @@ body {
 }
 
 
-/* description section */
+/* description section 
 .store-description-section {
     width: min(1100px, 94%);
     margin: 0 auto 2.5rem;
@@ -168,7 +170,7 @@ body {
 }
 
 
-/* description heading */
+/* description heading 
 .store-description-title {
     font-size: 2.3rem;
     font-weight: 800;
@@ -177,7 +179,7 @@ body {
 }
 
 
-/* description body */
+/* description body 
 .store-description-text {
     width: min(900px, 95%);
     margin: 0 auto;
@@ -187,14 +189,14 @@ body {
 }
 
 
-/* listings section */
+/* listings section 
 .storefront-listings-section {
     width: min(1100px, 94%);
     margin: 0 auto;
 }
 
 
-/* section heading */
+/* section heading 
 .listings-heading {
     text-align: center;
     font-size: 2.2rem;
@@ -205,7 +207,7 @@ body {
 }
 
 
-/* listing grid */
+/* listing grid 
 .listing-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -213,7 +215,7 @@ body {
 }
 
 
-/* listing card */
+/* listing card 
 .listing-card {
     background: rgba(0, 0, 0, 0.84);
     border: 1px solid rgba(255, 255, 255, 0.7);
@@ -231,7 +233,7 @@ body {
 }
 
 
-/* listing image placeholder */
+/* listing image placeholder 
 .listing-image {
     width: 100%;
     min-height: 330px;
@@ -241,7 +243,7 @@ body {
 }
 
 
-/* listing info row */
+/* listing info row 
 .listing-info {
     width: 100%;
     display: grid;
@@ -252,14 +254,14 @@ body {
 }
 
 
-/* item name */
+/* item name 
 .item-name {
     font-size: 1.15rem;
     font-weight: 700;
 }
 
 
-/* price text */
+/* price text 
 .item-price {
     font-size: 1.15rem;
     font-weight: 700;
@@ -267,7 +269,7 @@ body {
 }
 
 
-/* cart button */
+/* cart button 
 .cart-btn {
     background: transparent;
     border: none;
@@ -278,7 +280,7 @@ body {
 }
 
 
-/* cart svg styling */
+/* cart svg styling 
 .cart-svg {
     width: 26px;
     height: 26px;
@@ -287,11 +289,13 @@ body {
 }
 
 
-/* hover effect */
+/* hover effect 
 .cart-btn:hover .cart-svg {
     color: #d4af37;
     transform: scale(1.1);
 }
+
+*/
 
 
 

@@ -14,7 +14,7 @@ going back to the storefront homepage.
 
 Later, this file will pull real listing data from the backend and render
 the correct storefront information dynamically.
-*/
+
 
 
 // test listing data: placeholder data for layout testing
@@ -84,3 +84,5 @@ backBtn.addEventListener("click", () => {
 
 // initial render
 renderListings();
+
+*/
