@@ -36,7 +36,6 @@ def signup():
         pw = request.form.get('password')
         email = request.form.get('email')
 
-        conn = get_db_connection()
         conn = get_connection()
         if conn is None:
             return "Database connection failed. <a href='/auth/signup'>Try again</a>"
