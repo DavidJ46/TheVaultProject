@@ -28,7 +28,7 @@ const cancelBtn = document.getElementById("cancelBtn");
 // cancel button: returns user to homepage or previous page
 cancelBtn.addEventListener("click", () => {
     // for now just go back to storefront homepage
-    window.location.href = "/";
+    window.location.href = "/storefronts";
 });
 
 

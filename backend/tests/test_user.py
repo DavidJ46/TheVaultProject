@@ -6,12 +6,12 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from services.auth_services import AuthService
-from config.db import get_db_connection
+from config.db import get_connection
 
 def test_registration():
     auth = AuthService() #Initalize the service layer
 
-    conn = get_db_connection()
+    conn = get_connection()
 
     if not conn:
         print("Could not connect to AWS RDS")
