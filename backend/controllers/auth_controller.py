@@ -1,5 +1,5 @@
 # By Ryan Grimes - Updated 3/19/2026
-from flask import Blueprint, request, session, redirect, url_for, render_template
+from flask import Blueprint, request, session, redirect, url_for, render_template, flash
 from services.auth_services import AuthService 
 from config.db import get_db_connection 
 
@@ -33,11 +33,13 @@ def signup():
         pw = request.form.get('password')
         email = request.form.get('email')
 
-        # Assuming register_user logic exists in your service
-        success, message = service.register_user(user, pw, email)
+        conn = get_db_connection()
+        success, message = service.register_user(user, pw, email, conn)
+        conn.close()
 
         if success:
-            return f"{message} <a href='/auth/login'>Login here</a>"
+            flash("Signup Successful! Please login with your new credentials.", "success")
+            return redirect(url_for('auth.login'))
         return f"Signup Failed: {message} <a href='/auth/signup'>Try again</a>"
     
     return render_template('signup.html')
@@ -52,6 +54,7 @@ def account():
 def listings():
     if 'user' not in session:
         return redirect(url_for('auth.login'))
+    #return render_template(storefront.html)
     
 @auth_bp.route('/logout')
 def logout():
