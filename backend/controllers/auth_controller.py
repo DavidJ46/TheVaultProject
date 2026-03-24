@@ -26,7 +26,6 @@ def login():
         
         return "Invalid Credentials. <a href='/auth/login'>Try again</a>"
     
-    # If GET, show the login form (Needs login.html)
     return render_template('login.html')
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
@@ -54,7 +53,7 @@ def signup():
 def listings():
     if 'user' not in session:
         return redirect(url_for('auth.login'))
-    #return render_template(storefront.html)
+    return render_template('storefront.html')
     
 @auth_bp.route('/logout')
 def logout():

@@ -22,9 +22,9 @@ def test_registration():
     try:
         success, message = auth.register_user(
             db_conn=conn,
-            username="higgs", 
+            username="ahw", 
             password="SecurePassword123", 
-            email="higgs@hamptonu.edu"
+            email="ahw@hamptonu.edu"
         )
 
         if success:
