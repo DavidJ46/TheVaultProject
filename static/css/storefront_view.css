@@ -1,7 +1,5 @@
-/* storefront_view.css */
+/* storefront_view.css
 
-<<<<<<< Updated upstream
-=======
     The Vault Campus Marketplace 
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4
@@ -18,19 +16,12 @@ Works with:
 - storefront_view.js
 */
 
-
->>>>>>> Stashed changes
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* page base: background, font, and text color */
->>>>>>> Stashed changes
 html, body {
     min-height: 100%;
 }
@@ -46,32 +37,17 @@ body {
     padding: 28px 0 40px;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* main wrapper */
->>>>>>> Stashed changes
 .storefront-view-page {
     width: min(1280px, 94%);
     margin: 0 auto;
     padding: 0.25rem 0 3rem;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* top section: holds banner area and overlapping logo */
->>>>>>> Stashed changes
 .storefront-top {
     position: relative;
     margin-bottom: 6.5rem;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* banner box */
->>>>>>> Stashed changes
 .storefront-banner {
     width: 100%;
     min-height: 280px;
@@ -86,11 +62,6 @@ body {
     overflow: hidden;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* back button */
->>>>>>> Stashed changes
 .back-btn {
     position: absolute;
     left: 1.4rem;
@@ -109,22 +80,12 @@ body {
     color: #d4af37;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* wrap for banner text */
->>>>>>> Stashed changes
 .banner-text-wrap {
     text-align: center;
     width: 100%;
     padding: 1rem 2rem;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* brand name at top of banner */
->>>>>>> Stashed changes
 .brand-name {
     font-size: 3.2rem;
     font-weight: 800;
@@ -132,31 +93,11 @@ body {
     color: white;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* banner title text */
-.banner-title {
-    font-size: 4.1rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    color: #d4af37;
-    line-height: 1;
-}
-
-
-/* contact info in banner */
->>>>>>> Stashed changes
 .contact-info {
     font-size: 1.05rem;
     color: rgba(255, 255, 255, 0.8);
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* overlapping logo */
->>>>>>> Stashed changes
 .storefront-logo {
     position: absolute;
     left: 2rem;
@@ -173,22 +114,12 @@ body {
     overflow: hidden;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* logo text */
->>>>>>> Stashed changes
 .storefront-logo p {
     font-size: 2rem;
     font-weight: 800;
     color: black;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* description section */
->>>>>>> Stashed changes
 .store-description-section {
     width: min(1100px, 94%);
     margin: 0 auto 2.5rem;
@@ -200,11 +131,6 @@ body {
     box-shadow: 0 0 25px rgba(184, 134, 11, 0.14);
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* description heading */
->>>>>>> Stashed changes
 .store-description-title {
     font-size: 2.2rem;
     font-weight: 800;
@@ -212,11 +138,6 @@ body {
     color: white;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* description body */
->>>>>>> Stashed changes
 .store-description-text {
     width: min(900px, 95%);
     margin: 0 auto;
@@ -225,21 +146,11 @@ body {
     color: #f2f2f2;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* listings section */
->>>>>>> Stashed changes
 .storefront-listings-section {
     width: min(1100px, 94%);
     margin: 0 auto;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* section heading */
->>>>>>> Stashed changes
 .listings-heading {
     text-align: center;
     font-size: 2rem;
@@ -249,22 +160,12 @@ body {
     color: white;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* listing grid */
->>>>>>> Stashed changes
 .listing-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* listing card */
->>>>>>> Stashed changes
 .listing-card {
     background: rgba(0, 0, 0, 0.84);
     border: 1px solid rgba(255, 255, 255, 0.7);
@@ -280,11 +181,6 @@ body {
     transform: translateY(-3px);
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* listing image placeholder */
->>>>>>> Stashed changes
 .listing-image {
     width: 100%;
     min-height: 270px;
@@ -294,11 +190,6 @@ body {
     object-fit: cover;
 }
 
-<<<<<<< Updated upstream
-=======
-
-/* listing info row */
->>>>>>> Stashed changes
 .listing-info {
     width: 100%;
     display: flex;
@@ -308,7 +199,6 @@ body {
     color: white;
 }
 
-<<<<<<< Updated upstream
 .listing-left {
     display: flex;
     align-items: center;
@@ -320,26 +210,6 @@ body {
     height: 30px;
     border: 1px solid rgba(255, 255, 255, 0.65);
     border-radius: 50%;
-=======
-
-/* item name */
-.item-name {
-    font-size: 1.15rem;
-    font-weight: 700;
-}
-
-
-/* price text */
-.item-price {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #d4af37;
-}
-
-
-/* cart button */
-.cart-btn {
->>>>>>> Stashed changes
     background: transparent;
     cursor: pointer;
     display: flex;
@@ -348,22 +218,12 @@ body {
     padding: 0;
 }
 
-<<<<<<< Updated upstream
 .wishlist-lock-btn svg {
     width: 16px;
     height: 16px;
     stroke: #ffffff;
     fill: transparent;
     stroke-width: 2;
-=======
-
-/* cart svg styling */
-.cart-svg {
-    width: 26px;
-    height: 26px;
-    color: white;
-    transition: transform 0.2s ease, color 0.2s ease;
->>>>>>> Stashed changes
 }
 
 .wishlist-lock-btn.active {
@@ -371,7 +231,6 @@ body {
     border-color: #ffffff;
 }
 
-<<<<<<< Updated upstream
 .wishlist-lock-btn.active svg {
     fill: #ffffff;
     stroke: #ffffff;
@@ -385,41 +244,14 @@ body {
 .item-price {
     font-size: 1.05rem;
     font-weight: 700;
-=======
-/* hover effect */
-.cart-btn:hover .cart-svg {
->>>>>>> Stashed changes
     color: #d4af37;
 }
 
-<<<<<<< Updated upstream
 .empty-state {
     grid-column: 1 / -1;
     text-align: center;
     color: #c9c9c9;
     font-style: italic;
-=======
-
-/* tablet */
-@media (max-width: 900px) {
-    .listing-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .brand-name {
-        font-size: 2.7rem;
-    }
-
-    .banner-title {
-        font-size: 3rem;
-    }
-
-    .storefront-logo {
-        width: 140px;
-        height: 140px;
-        bottom: -3.8rem;
-    }
->>>>>>> Stashed changes
 }
 
 @media (max-width: 900px) {
@@ -427,7 +259,6 @@ body {
         grid-template-columns: 1fr;
     }
 
-<<<<<<< Updated upstream
     .brand-name {
         font-size: 2.4rem;
     }
@@ -438,62 +269,3 @@ body {
         bottom: -3.2rem;
     }
 }
-=======
-/* mobile */
-@media (max-width: 600px) {
-    .storefront-banner {
-        min-height: 230px;
-    }
-
-    .back-btn {
-        font-size: 0.82rem;
-        left: 1rem;
-        top: 1rem;
-    }
-
-    .brand-name {
-        font-size: 2.1rem;
-        margin-bottom: 0.8rem;
-    }
-
-    .banner-title {
-        font-size: 2.2rem;
-    }
-
-    .contact-info {
-        font-size: 0.95rem;
-    }
-
-    .storefront-logo {
-        width: 110px;
-        height: 110px;
-        bottom: -2.8rem;
-        left: 1.2rem;
-    }
-
-    .storefront-logo p {
-        font-size: 1.3rem;
-    }
-
-    .store-description-title {
-        font-size: 1.8rem;
-    }
-
-    .listings-heading {
-        font-size: 1.8rem;
-    }
-
-    .listing-image {
-        min-height: 260px;
-    }
-
-    .listing-info {
-        grid-template-columns: 1fr auto;
-    }
-
-    .cart-btn {
-        grid-column: span 2;
-        justify-self: end;
-    }
-}
->>>>>>> Stashed changes

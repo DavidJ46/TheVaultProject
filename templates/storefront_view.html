@@ -21,12 +21,15 @@ Public storefront detail page rendered when a user clicks Enter Storefront.
 <main class="storefront-view-page">
     <section class="storefront-top">
         <div class="storefront-banner" id="storefrontBanner">
-            <button class="back-btn" id="backBtn">&larr; CONTINUE SHOPPING</button>
-            <div class="banner-text-wrap">
-                <h1 class="brand-name" id="brandName">Loading...</h1>
-                <p class="contact-info" id="contactInfo"></p>
-            </div>
-        </div>
+   <button class="back-btn" id="backBtn"
+  onclick="window.location.href='/storefronts'">
+  &larr; CONTINUE SHOPPING
+</button>
+    <div class="banner-text-wrap">
+        <h1 class="brand-name" id="brandName">Loading...</h1>
+        <p class="contact-info" id="contactInfo"></p>
+    </div>
+</div>
 
         <div class="storefront-logo" id="storefrontLogoWrap">
             <img id="storefrontLogo" alt="Storefront Logo" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
