@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+<<<<<<< Updated upstream
     initializeStorefront(storefrontId);
 
     function getStorefrontIdFromPath() {
@@ -33,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const id = parseInt(parts[parts.length - 1], 10);
         return Number.isNaN(id) ? null : id;
     }
+=======
+Later, this file will pull real listing data from the backend and render
+the correct storefront information dynamically.
+*/
+>>>>>>> Stashed changes
 
     async function initializeStorefront(id) {
         const [storefrontData, listingsData] = await Promise.all([
@@ -85,6 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Error loading listings from API:", error);
         }
 
+<<<<<<< Updated upstream
         return [];
     }
 
@@ -93,6 +100,30 @@ document.addEventListener("DOMContentLoaded", function () {
         currentStorefrontName = name;
         if (brandNameEl) brandNameEl.textContent = name;
         if (listingsHeadingEl) listingsHeadingEl.textContent = `Shop ${name}`;
+=======
+                <button class="cart-btn" aria-label="Add to cart">
+                    <svg viewBox="0 0 24 24" class="cart-svg">
+                        <path
+                            d="M6 8h12l-1 11H7L6 8Z"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="M9 8V6a3 3 0 0 1 6 0v2"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                        <line x1="18" y1="5" x2="18" y2="11" stroke="currentColor" stroke-width="2"/>
+                        <line x1="15" y1="8" x2="21" y2="8" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+>>>>>>> Stashed changes
 
         const contact = store.instagram_handle || store.contact_info || "";
         if (contactInfoEl) contactInfoEl.textContent = contact;
@@ -307,3 +338,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return images[index % images.length];
     }
 });
+<<<<<<< Updated upstream
+=======
+
+
+// initial render
+renderListings();
+>>>>>>> Stashed changes

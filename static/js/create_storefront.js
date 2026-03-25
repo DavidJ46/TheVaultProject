@@ -25,7 +25,7 @@ const form = document.getElementById("storefrontForm");
 const cancelBtn = document.getElementById("cancelBtn");
 
 
-// cancel button: returns user to homepage or previous page
+// cancel button: returns user to homepage
 cancelBtn.addEventListener("click", () => {
     // for now just go back to storefront homepage
     window.location.href = "/storefronts";
@@ -51,7 +51,7 @@ form.addEventListener("submit", (event) => {
     // placeholder: simulate success
     alert("Storefront created (placeholder)");
 
-    // future: this is where you will send data to Flask
+    // send data to Flask
     /*
     fetch("/api/storefronts", {
         method: "POST",

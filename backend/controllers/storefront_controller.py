@@ -2,6 +2,7 @@
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3
 # Updated by Day Ekoi - Iteration 4 3/25/26
+# Created by Day Ekoi - Iteration 3 2/22/26
 
 """
 storefront_controller.py
