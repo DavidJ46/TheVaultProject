@@ -208,44 +208,44 @@ body {
 
 /* Add to Bag Form Styling */
 .bag-form {
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
+    margin-top: 10px; /* Updated by Ryan 3/25/26 */
+    padding: 10px; /* Updated by Ryan 3/25/26 */
+    background: rgba(255, 255, 255, 0.05); /* Updated by Ryan 3/25/26 */
+    border-radius: 12px; /* Updated by Ryan 3/25/26 */
 }
 
 .selection-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
+    display: flex; /* Updated by Ryan 3/25/26 */
+    gap: 8px; /* Updated by Ryan 3/25/26 */
+    margin-bottom: 10px; /* Updated by Ryan 3/25/26 */
 }
 
 .vault-select, .vault-qty {
-    background: #000;
-    color: #D4AF37; /* Gold */
-    border: 1px solid #B8860B;
-    padding: 8px;
-    border-radius: 4px;
+    background: #000; /* Updated by Ryan 3/25/26 */
+    color: #D4AF37; /* Updated by Ryan 3/25/26 */
+    border: 1px solid #B8860B; /* Updated by Ryan 3/25/26 */
+    padding: 8px; /* Updated by Ryan 3/25/26 */
+    border-radius: 4px; /* Updated by Ryan 3/25/26 */
 }
 
-.vault-select { flex: 2; }
-.vault-qty { flex: 1; }
+.vault-select { flex: 2; } /* Updated by Ryan 3/25/26 */
+.vault-qty { flex: 1; } /* Updated by Ryan 3/25/26 */
 
 .add-bag-btn {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    color: #D4AF37;
-    border: 1px solid #D4AF37;
-    text-transform: uppercase;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+    width: 100%; /* Updated by Ryan 3/25/26 */
+    padding: 10px; /* Updated by Ryan 3/25/26 */
+    background: transparent; /* Updated by Ryan 3/25/26 */
+    color: #D4AF37; /* Updated by Ryan 3/25/26 */
+    border: 1px solid #D4AF37; /* Updated by Ryan 3/25/26 */
+    text-transform: uppercase; /* Updated by Ryan 3/25/26 */
+    font-weight: bold; /* Updated by Ryan 3/25/26 */
+    cursor: pointer; /* Updated by Ryan 3/25/26 */
+    transition: 0.3s; /* Updated by Ryan 3/25/26 */
 }
 
 .add-bag-btn:hover {
-    background: #D4AF37;
-    color: #000;
+    background: #D4AF37; /* Updated by Ryan 3/25/26 */
+    color: #000; /* Updated by Ryan 3/25/26 */
 }
 
 .topbar-svg {
