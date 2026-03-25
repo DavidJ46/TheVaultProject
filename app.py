@@ -34,6 +34,11 @@ def create_app():
     def create_storefront():
         return render_template('create_storefront.html')
 
+    # Route to the "Create Listing" form - Updated 3/24/2026
+    @app.route('/create-listing')
+    def create_listing():
+        return render_template('create_listing.html')
+
     #Route to the Cart screen - Updated 3/22/2026
     @app.route('/cart')
     def cart():

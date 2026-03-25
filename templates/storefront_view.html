@@ -1,110 +1,51 @@
 <!--
  storefront_view.html
-
     The Vault Campus Marketplace 
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4
-    3/22/2026
-
-
-Description of file (What it does, how it is used, etc):
-
-This file is the public storefront view page. It displays a storefront the way regular users/shoppers
-would see it after clicking "Enter Storefront" from the storefront homepage.
-
-This page shows:
-- Back button to return to storefront homepage
-- Storefront banner
-- Store logo
-- Brand name
-- Contact info
-- Store description
-- Listings available in that storefront
-
-This file acts as the UI structure for the public storefront page.
+    3/18/2026-3/22/2026
+The Vault Campus Marketplace
+Public storefront detail page rendered when a user clicks Enter Storefront.
 -->
-<!---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
---->
-     <!-- Metadata stuff 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-     Page title shown in browser tab -->
-    <!-- <title>Storefront View</title> -->
-
-    <!-- live server version 
-    <link rel="stylesheet" href="./storefront_view.css"> -->
-
-<!-- Flask Version -->
-   
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/storefront_view.css') }}"> 
-
+    <title>Storefront View</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/storefront_view.css') }}">
 </head>
-
 <body>
- Start of main body code
 
-    Main wrapper 
-    <main class="storefront-view-page">
-
-        banner section: holds back button, banner, logo, and top store info 
-        <section class="storefront-top">
-
-             banner box 
-            <div class="storefront-banner">
-
-                 back button 
-                <button class="back-btn" id="backBtn">&larr; CONTINUE SHOPPING</button>
-
-                 banner text 
-                <div class="banner-text-wrap">
-                    <h1 class="brand-name">The Vault</h1>
-                    <h2 class="banner-title">Storefront View</h2>
-                    <p class="contact-info">@brandname • contact info</p>
-                </div>
-
+<main class="storefront-view-page">
+    <section class="storefront-top">
+        <div class="storefront-banner" id="storefrontBanner">
+            <button class="back-btn" id="backBtn">&larr; CONTINUE SHOPPING</button>
+            <div class="banner-text-wrap">
+                <h1 class="brand-name" id="brandName">Loading...</h1>
+                <p class="contact-info" id="contactInfo"></p>
             </div>
+        </div>
 
-            overlapping logo 
-            <div class="storefront-logo">
-                <p>Logo</p>
-            </div>
+        <div class="storefront-logo" id="storefrontLogoWrap">
+            <img id="storefrontLogo" alt="Storefront Logo" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+            <p id="logoFallback">Logo</p>
+        </div>
+    </section>
 
-        </section>
+    <section class="store-description-section">
+        <p class="store-description-title">Store Description</p>
+        <p class="store-description-text" id="storeDescription">Loading storefront details...</p>
+    </section>
 
+    <section class="storefront-listings-section">
+        <h3 class="listings-heading" id="listingsHeading">Listings</h3>
+        <div class="listing-grid" id="listingGrid"></div>
+    </section>
+</main>
 
-        store description section 
-        <section class="store-description-section">
-            <p class="store-description-title">Store Description</p>
-            <p class="store-description-text">
-                This is where the storefront description will go. It can explain the brand,
-                what it sells, its target audience, and the style or vibe of the store.
-            </p>
-        </section>
-
-
-         listings section 
-        <section class="storefront-listings-section">
-
-             section title 
-            <h3 class="listings-heading">Shop 'Brand Name'</h3>
-
-             dynamic listing grid 
-            <div class="listing-grid" id="listingGrid"></div>
-
-        </section>
-
-    </main>
-
-     live server version 
-    <script src="./storefront_view.js"></script> -->
-
-    <!-- javascript 
-    <script src="{{ url_for('static', filename='js/storefront_view.js') }}"></script> 
-
+<script src="{{ url_for('static', filename='js/storefront_view.js') }}"></script>
 
 </body>
-</html> -->
+</html>

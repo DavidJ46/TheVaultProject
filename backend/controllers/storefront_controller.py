@@ -1,7 +1,7 @@
 # The Vault Campus Marketplace
 # CSC 405 Sp 26'
-# Created by Day Ekoi - Iteration 
-# Updated by Day Ekoi - Iteration 4 2/22/26
+# Created by Day Ekoi - Iteration 3
+# Updated by Day Ekoi - Iteration 4 3/25/26
 
 """
 storefront_controller.py
@@ -26,7 +26,7 @@ from services.storefront_service import (
     deactivate_storefront_service
 )
 
-from models.storefront_model import get_active_storefronts  # Updated by Day E 3/22/26
+from models.storefront_model import get_active_storefronts, get_storefront_by_id  # Updated by Day E 3/22/26
 
 # API blueprint
 storefront_bp = Blueprint("storefront_bp", __name__, url_prefix="/api/storefronts")
@@ -79,7 +79,7 @@ def my_storefront_page():
 
 @storefront_pages_bp.route("/storefronts/<int:storefront_id>")
 def storefront_view_page(storefront_id):
-    return render_template("storefront.html", storefront_id=storefront_id)
+    return render_template("storefront_view.html", storefront_id=storefront_id)
 
 
 # ________________________________________________________
@@ -93,6 +93,19 @@ def get_all_storefronts_route():
     try:
         storefronts = get_active_storefronts()
         return jsonify(storefronts), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# Get single storefront by ID (Public)
+# GET /api/storefronts/<storefront_id>
+@storefront_bp.get("/<int:storefront_id>")
+def get_storefront_by_id_route(storefront_id):
+    try:
+        storefront = get_storefront_by_id(storefront_id)
+        if storefront is None:
+            return jsonify({"error": "Storefront not found."}), 404
+        return jsonify(storefront), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
