@@ -151,10 +151,25 @@ function createCard(store) {
         <img class="carousel-image" src="${images[0]}">
         <button class="carousel-btn right">&#10095;</button>
       </div>
+
+      <form action="/auth/add_to_cart" method="POST" class="bag-form">
+        <input type="hidden" name="item_id" value="${store.id}">
+        <input type="hidden" name="item_name" value="${store.name} Official Item">
+        <input type="hidden" name="price" value="45.00"> <div class="selection-row">
+          <select name="size" class="vault-select">
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+          </select>
+          <input type="number" name="quantity" value="1" min="1" class="vault-qty">
+        </div>
+        <button type="submit" class="add-bag-btn">Add to Bag</button>
+      </form>
     </div>
 
-    <div class="storefront-footer">
-      <button class="enter-btn">Enter Storefront</button>
+    <div class="storefront-footer" style="margin-top: 15px;">
+      <button class="enter-btn" style="width: 100%;">Enter Storefront</button>
     </div>
   `;
 

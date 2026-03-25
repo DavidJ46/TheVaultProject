@@ -206,6 +206,48 @@ body {
     cursor: pointer; /* Updated by Day E 3/22/26 */
 }
 
+/* Add to Bag Form Styling */
+.bag-form {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.selection-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.vault-select, .vault-qty {
+    background: #000;
+    color: #D4AF37; /* Gold */
+    border: 1px solid #B8860B;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.vault-select { flex: 2; }
+.vault-qty { flex: 1; }
+
+.add-bag-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #D4AF37;
+    border: 1px solid #D4AF37;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.add-bag-btn:hover {
+    background: #D4AF37;
+    color: #000;
+}
+
 .topbar-svg {
     width: 48px; /* Updated by Day E 3/22/26 */
     height: 48px; /* Updated by Day E 3/22/26 */

@@ -137,7 +137,7 @@ Updated nav bar
     <div class="topbar-actions">
     
     <!--Shopping bag button -->
-      <a href="{{ url_for('cart') }}" class="icon-btn bag-btn" aria-label="View shopping bag" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <a href="{{ url_for('auth.view_cart') }}" class="icon-btn bag-btn" aria-label="View shopping bag" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
         <svg viewBox="0 0 24 24" class="topbar-svg" aria-hidden="true">
           <path
             d="M6 8h12l-1 11H7L6 8Z"
@@ -238,7 +238,23 @@ Updated nav bar
     <section class="storefront-grid" id="storefrontGrid">
       <!-- Where all storefront cards will appear when created. JS will insert storefront cards here. Realisitcally only 10 cards should fit on a page 
        before moving on to the next to keep everything compact but also easy to read and naviagte through -->
+      <div class="test-card" style="border: 1px solid #B8860B; padding: 20px; margin: 10px;">
+        <h3>Vault Legacy Hoodie</h3>
+        <p>$45.00</p>
+        <form action="{{ url_for('auth.add_to_cart') }}" method="POST">
+            <input type="hidden" name="item_id" value="VL-001">
+            <input type="hidden" name="item_name" value="Vault Legacy Hoodie">
+            <input type="hidden" name="price" value="45.00">
 
+            <select name="size">
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+            </select>
+            <input type="number" name="quantity" value="1" min="1" style="width: 40px;">
+            <button type="submit" class="submit-btn">Add to Bag</button>
+        </form>
+      </div>
     </section>
 
     <!-- Page controls that live at the bottom of the page under the grids where users can go back and forth from page to page. 

@@ -65,4 +65,50 @@ def account():
 def logout():
     session.clear()
     return redirect(url_for('auth.login'))
-    
+
+@auth_bp.route('/cart')
+def view_cart():
+    if 'cart' not in session:
+        session['cart'] = []
+    return render_template('cart.html')
+
+@auth_bp.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
+    # Capture the details from the form
+    item_id = request.form.get('item_id')
+    item_name = request.form.get('item_name')
+    price = request.form.get('price', 0)
+    quantity = request.form.get('quantity', 1)
+    size = request.form.get('size')
+
+    # Initialize the cart in the session if it doesn't exist
+    if 'cart' not in session:
+        session['cart'] = []
+
+    # Create the item object
+    cart_item = {
+        'id': item_id,
+        'name': item_name,
+        'price': float(price),
+        'quantity': int(quantity),
+        'size': size
+    }
+
+    temp_cart = session['cart']
+    temp_cart.append(cart_item)
+    session['cart'] = temp_cart
+    session.modified = True
+
+    flash(f"Added {item_name} (Size: {size}) to your cart!", "success")
+    return redirect(url_for('auth.view_cart'))
+
+@auth_bp.route('/remove_from_cart/<int:index>', methods=['POST'])
+def remove_from_cart(index):
+    if 'cart' in session:
+        cart = session['cart']
+        if 0 <= index < len(cart):
+            removed_item = cart.pop(index)
+            session['cart'] = cart
+            session.modified = True
+            flash(f"Removed {removed_item['name']} from bag.", "info")
+    return redirect(url_for('auth.view_cart'))
