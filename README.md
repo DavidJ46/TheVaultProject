@@ -256,11 +256,11 @@ Amazon S3
 
 | Name | Role |
 |---|---|
-| David Jackson | Project Manager, Admin backend |
+| David Jackson | Project Manager, Admin backend & frontend|
 | Elali McNair | Co-PM, Wishlist & Purchase backend, Create Listing frontend |
 | Ryan Grimes | Systems & Security Lead, Auth backend, Login/Signup/Cart frontend |
 | Day Ekoi | Cloud Deployment Lead, Storefront & Listings backend & frontend |
-| Madison Boyd | Documentation Lead, User & Account Settings |
+| Madison Boyd | Documentation Lead, User & Account Settings backend & frontend|
 | Kaila Roberts | Database & App Support, Checkout Backend and Frontend|
 
 ---
