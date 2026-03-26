@@ -1,0 +1,86 @@
+<!-- File Created By David Jackson -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Title shown in browser tab -->
+    <title>Admin Dashboard</title>
+
+    <!-- Link to external CSS file for styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+    <!-- Main page title -->
+    <h1>Admin Dashboard</h1>
+
+    <!-- USERS SECTION -->
+    <section>
+        <h2>Users</h2>
+
+        <!-- Button triggers JavaScript function to load users from backend -->
+        <button onclick="loadUsers()">Load Users</button>
+
+        <!-- Table to display users dynamically -->
+        <table id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <!-- Data will be inserted here using JavaScript -->
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- LISTINGS SECTION -->
+    <section>
+        <h2>Listings</h2>
+
+        <!-- Button loads listings from backend -->
+        <button onclick="loadListings()">Load Listings</button>
+
+        <table id="listingsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <!-- Filled dynamically with JavaScript -->
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- STOREFRONTS SECTION -->
+    <section>
+        <h2>Storefronts</h2>
+
+        <!-- Button loads storefronts -->
+        <button onclick="loadStorefronts()">Load Storefronts</button>
+
+        <table id="storefrontsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+
+            <!-- Populated dynamically -->
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Link to JavaScript file (handles API calls and UI updates) -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+
+</body>
+</html>
