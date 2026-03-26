@@ -1,0 +1,48 @@
+/* File Created By David Jackson */
+
+/* General page styling */
+body {
+    font-family: Arial, sans-serif; /* Clean readable font */
+    padding: 20px; /* Space around content */
+    background-color: #f4f4f4; /* Light gray background */
+}
+
+/* Main title styling */
+h1 {
+    text-align: center;
+}
+
+/* Section styling (each admin block) */
+section {
+    margin-bottom: 40px; /* Space between sections */
+    background: white; /* White card look */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+}
+
+/* Table styling */
+table {
+    width: 100%; /* Full width */
+    border-collapse: collapse; /* Remove spacing between borders */
+    margin-top: 10px;
+}
+
+/* Table cell styling */
+th, td {
+    border: 1px solid #ccc; /* Light borders */
+    padding: 10px;
+    text-align: left;
+}
+
+/* General button styling */
+button {
+    padding: 8px 12px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+/* Delete button styling (red for danger action) */
+button.delete {
+    background-color: red;
+    color: white;
+}
