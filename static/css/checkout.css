@@ -1,0 +1,113 @@
+/* checkout.css
+    The Vault Campus Marketplace
+    Created by Kaila Roberts - Iteration 4
+    
+    This file pulls the theme from storefront.css to ensure 
+    consistent branding across the purchase flow.
+*/
+
+/* checkout.css
+    Derived from create_storefront.css for form consistency
+*/
+
+/* checkout.css
+    Theme: The Vault Premium Dark Mode
+    Matches branding established by Day Ekoi
+*/
+
+/* Base Page Styles */
+body {
+    /* Uses the specific background gradient and image path from the project */
+    background: linear-gradient(rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.58)),
+                url("/static/images/background.png") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+}
+
+/* Header & Navigation Styles */
+.storefront-banner {
+    width: min(1200px, 92%);
+    margin: 1.5rem auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link { text-decoration: none; } /* Removes default blue underline from links */
+
+/* THE "NICE" BACK BUTTON: Secondary style (Gold outline, transparent center) */
+.secondary-btn {
+    background: transparent;
+    color: #d4af37;
+    border: 1px solid #d4af37;
+    padding: 0.8rem 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth transition for the hover effect */
+    border-radius: 2px;
+}
+
+.secondary-btn:hover {
+    background: rgba(212, 175, 55, 0.1); /* Subtle gold glow on hover */
+    transform: translateY(-2px); /* Matches movement of storefront cards */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Form & Input Styles */
+.checkout-layout-wrapper {
+    width: min(1200px, 92%);
+    margin: 0 auto;
+    display: flex;
+    gap: 2rem;
+}
+
+.form-card {
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(184, 134, 11, 0.65);
+    padding: 2rem;
+    box-shadow: 0 0 25px rgba(184, 134, 11, 0.18);
+}
+
+.checkout-form-container { flex: 2; }
+.order-summary-container { flex: 1; }
+
+.section-label {
+    color: #d4af37;
+    text-transform: uppercase;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+/* Input boxes match the 'create_storefront' form style */
+input, textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(184, 134, 11, 0.5);
+    padding: 1rem;
+    color: white;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    outline: none;
+}
+
+/* COMPLETE TRANSACTION BUTTON: Primary style (Solid Gold Gradient) */
+.primary-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(145deg, #B8860B, #8B6508);
+    color: black;
+    border: none;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.primary-btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}

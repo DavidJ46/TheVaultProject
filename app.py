@@ -44,6 +44,11 @@ def create_app():
     def cart():
         return render_template('cart.html')
 
+    #Route to the Checkout - Updates 3/25/2026
+    @app.route('/checkout')
+    def checkout():
+        return render_template('checkout.html')
+
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(listing_bp)
@@ -59,7 +64,7 @@ def create_app():
 
     return app
 
+app = create_app()
 
 if __name__ == "__main__":
-    app = create_app()
     app.run(debug=True)
