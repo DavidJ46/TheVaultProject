@@ -14,7 +14,7 @@ The Vault is a web-based campus marketplace exclusively for Hampton University s
 ---
 
 ## Tech Stack
-
+ 
 | Layer | Technology |
 |---|---|
 | Backend | Python, Flask |
@@ -22,10 +22,25 @@ The Vault is a web-based campus marketplace exclusively for Hampton University s
 | Database | PostgreSQL (AWS RDS) |
 | Image Storage | Amazon S3 |
 | Cloud Hosting | AWS Elastic Beanstalk |
+| Cloud Infranstructure | Amazon Web Services (AWS) |
+| DB Adapter | psycopg2 |
 | Version Control | GitHub |
 | Project Management | Jira |
+| Collaboration | GoogleDrive |
 | IDE | VS Code |
-
+ 
+### AWS Services
+ 
+| Service | Purpose |
+|---|---|
+| **AWS Elastic Beanstalk** | Hosts and runs the Flask backend application. Receives HTTPS requests from the browser, handles server-side processing, and communicates with RDS and S3. |
+| **AWS RDS (PostgreSQL)** | Managed relational database that stores all persistent data: users, storefronts, listings, orders, wishlists, and return records. The Flask backend communicates with RDS using SQL queries via `psycopg2`. |
+| **Amazon RDS Endpoint** | Provides the hostname and port used by the Flask app to establish a secure connection to the PostgreSQL database instance. |
+| **Amazon S3** | Stores all listing images externally. The backend uploads images to S3 and saves the resulting image URL in the database for retrieval and display. |
+| **AWS IAM (Identity and Access Management)** | Controls access permissions across AWS resources. Ensures only authorized roles can access RDS, S3, and the deployment environment. |
+| **Amazon VPC (Virtual Private Cloud)** | Provides network-level isolation between infrastructure components. Ensures controlled communication between the application server and the database layer. |
+| **AWS Security Groups** | Acts as a virtual firewall. Restricts database access so that only the Elastic Beanstalk environment can communicate with the RDS instance no public access. Database connection runs over TCP/IP on port 5432. |
+ 
 ---
 
 ## Features
@@ -183,7 +198,7 @@ The following tables are initialized via `init_db.py`:
 ### Prerequisites
 - Python 3.12+
 - PostgreSQL (or AWS RDS credentials)
-- AWS credentials (for S3 image storage)
+- AWS credentials (for all service usage)
 
 ### Installation
 
@@ -256,11 +271,11 @@ Amazon S3
 
 | Name | Role |
 |---|---|
-| David Jackson | Project Manager, Admin backend |
+| David Jackson | Project Manager, Admin backend & frontend|
 | Elali McNair | Co-PM, Wishlist & Purchase backend, Create Listing frontend |
 | Ryan Grimes | Systems & Security Lead, Auth backend, Login/Signup/Cart frontend |
 | Day Ekoi | Cloud Deployment Lead, Storefront & Listings backend & frontend |
-| Madison Boyd | Documentation Lead, User & Account Settings |
+| Madison Boyd | Documentation Lead, User & Account Settings backend & frontend|
 | Kaila Roberts | Database & App Support, Checkout Backend and Frontend|
 
 ---
