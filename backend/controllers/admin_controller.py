@@ -16,6 +16,7 @@ Frontend → Controller → Service → Model → Database
 """
 
 from flask import Blueprint, jsonify, request, session, abort
+from flask import render_template  # Added by David Jackson 3/23/2026
 
 # Import service functions
 from services.admin_service import (
@@ -45,8 +46,8 @@ def require_admin():
     This prevents normal users from accessing admin-only routes.
     """
 
-    # Check if the user is logged in
-    if "user_id" not in session:
+    # Check if the user is logged in - updated by David Jackson 3/23/2026
+    if "user" not in session:
         abort(401)  # Unauthorized (user not logged in)
 
     # Check if the user has the admin role
