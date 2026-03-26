@@ -22,7 +22,12 @@ def login():
         if success:
             session['user'] = user
             session['role'] = role
-            return redirect(url_for('auth.listings'))
+            #return redirect(url_for('auth.listings'))
+            # Redirect based on role - added by David Jackson 3/23/2026
+            if role and role.lower() == 'admin':
+                return redirect(url_for('admin.admin_dashboard'))
+            else:
+                return redirect(url_for('auth.listings'))
         
         return "Invalid Credentials. <a href='/auth/login'>Try again</a>"
     
