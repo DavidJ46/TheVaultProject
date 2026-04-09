@@ -4,6 +4,7 @@ create_listing.js
 The Vault Campus Marketplace
 CSC 405 Sp 26
 Created by Elali McNair - Iteration 4
+Updated by Day Ekoi - Iteration 5 4/9/26
 
 Purpose:
 This file handles the form submission for the Create Listing page.
@@ -35,6 +36,15 @@ document.addEventListener('DOMContentLoaded', function() {
   if (listingForm) {
     listingForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      // get real user from session - Updated by Day E 4/9/26
+      const userRes = await fetch("/auth/api/auth/me");
+      if (!userRes.ok) {
+        alert("You must be logged in to create a listing.");
+        window.location.href = "/auth/login";
+        return;
+      }
+      const user = await userRes.json();
 
       // Collect form data including file
       const storefrontId = document.getElementById("storefrontSelect").value;
@@ -75,14 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append("fulfillment_type", "IN_STOCK");
         formData.append("status", "ACTIVE");
         formData.append("listing_image", listingImageInput.files[0]);
-        
-        // Append sizes as JSON string
         formData.append("sizes_available", JSON.stringify(sizes));
 
         const response = await fetch("/api/listings/create", {
           method: "POST",
           headers: {
-            "X-User-Id": "1", // TODO: Get actual user ID from session/auth
+            "X-User-Id": user.id,
+            "X-User-Role": user.role
           },
           body: formData,
         });
@@ -91,8 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (response.ok) {
           alert("Listing created successfully!");
-          // Redirect to storefront view or homepage
-          window.location.href = "/storefronts";
+          window.location.href = "/my-storefront";
         } else {
           alert("Error creating listing: " + (result.error || "Unknown error"));
         }
@@ -111,12 +119,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Function to load user's storefronts
+  // Updated by Day E 4/9/26 - uses real session user instead of hardcoded ID
   async function loadUserStorefronts() {
     try {
+      // get real user from session
+      const userRes = await fetch("/auth/api/auth/me");
+      if (!userRes.ok) {
+        window.location.href = "/auth/login";
+        return;
+      }
+      const user = await userRes.json();
+
       const response = await fetch("/api/storefronts/me", {
         method: "GET",
         headers: {
-          "X-User-Id": "1", // TODO: Get actual user ID from session/auth
+          "X-User-Id": user.id,
+          "X-User-Role": user.role
         },
       });
 
@@ -127,10 +145,10 @@ document.addEventListener('DOMContentLoaded', function() {
           : storefrontData && storefrontData.id
             ? [storefrontData]
             : [];
-        
+
         // Clear loading option
         storefrontSelect.innerHTML = "";
-        
+
         if (storefronts.length > 0) {
           // Add a default selection prompt
           const defaultOption = document.createElement("option");
@@ -147,41 +165,33 @@ document.addEventListener('DOMContentLoaded', function() {
             storefrontSelect.appendChild(option);
           });
         } else {
-          // User doesn't have a storefront
-          const option = document.createElement("option");
-          option.value = "";
-          option.textContent = "No storefronts found - create one first";
-          option.disabled = true;
-          storefrontSelect.appendChild(option);
-          
-          // Disable the form and show message
+          // user has no storefront — disable form and show message
+          storefrontSelect.innerHTML = '<option value="" disabled>No storefronts found - create one first</option>';
+
           if (listingForm) {
             listingForm.querySelectorAll("input, select, button[type='submit']").forEach(el => {
               el.disabled = true;
             });
           }
-          
-          // Show user-friendly message instead of alert
+
           const messageDiv = document.createElement("div");
-          messageDiv.style.cssText = "color: red; margin-top: 10px; font-weight: bold;";
-          messageDiv.textContent = "You must create a storefront before you can create listings.";
+          messageDiv.style.cssText = "color: #d4af37; margin-top: 10px; font-weight: bold; text-align:center;";
+          messageDiv.innerHTML = `You must create a storefront before creating listings. <a href="/storefronts/create" style="color:#fff; text-decoration:underline;">Create one here</a>`;
           storefrontSelect.parentNode.appendChild(messageDiv);
         }
       } else if (response.status === 404) {
-        // User doesn't have a storefront
+        // user has no storefront
         storefrontSelect.innerHTML = '<option value="" disabled>No storefronts found - create one first</option>';
-        
-        // Disable the form and show message
+
         if (listingForm) {
           listingForm.querySelectorAll("input, select, button[type='submit']").forEach(el => {
             el.disabled = true;
           });
         }
-        
-        // Show user-friendly message
+
         const messageDiv = document.createElement("div");
-        messageDiv.style.cssText = "color: red; margin-top: 10px; font-weight: bold;";
-        messageDiv.textContent = "You must create a storefront before you can create listings.";
+        messageDiv.style.cssText = "color: #d4af37; margin-top: 10px; font-weight: bold; text-align:center;";
+        messageDiv.innerHTML = `You must create a storefront before creating listings. <a href="/storefronts/create" style="color:#fff; text-decoration:underline;">Create one here</a>`;
         storefrontSelect.parentNode.appendChild(messageDiv);
       } else {
         console.error("Failed to load storefronts");
@@ -193,4 +203,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
-

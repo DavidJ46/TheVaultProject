@@ -90,7 +90,7 @@ body {
 
 
 /* Metallic button styling */
-.create-btn,
+/* .create-btn,
 .enter-btn,
 .page-btn {
     background: linear-gradient(145deg, #B8860B, #8B6508);
@@ -101,10 +101,30 @@ body {
     letter-spacing: 2px;
     cursor: pointer;
     transition: 0.3s;
-    border-radius: 2px; /* Updated by Day E 3/22/26 */
+    border-radius: 2px;
+} */
+
+/* .create-btn:hover,
+.enter-btn:hover,
+.page-btn:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+} */
+
+/* Updated by Day E 4/9/26 - separated create-btn from enter/page btns, added white border and transparent bg */
+.enter-btn,
+.page-btn {
+    background: linear-gradient(145deg, #B8860B, #8B6508);
+    color: black;
+    border: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 2px;
 }
 
-.create-btn:hover,
 .enter-btn:hover,
 .page-btn:hover {
     filter: brightness(1.2);
@@ -114,8 +134,37 @@ body {
 .create-btn {
     width: 100%;
     padding: 14px 16px;
+    margin-bottom: 10px;
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 2px;
 }
 
+.create-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.my-storefront-btn {
+    border-color: #D4AF37;
+    color: #D4AF37;
+}
+
+.my-storefront-btn:hover {
+    background: rgba(212, 175, 55, 0.15);
+}
+
+nav-divider { /* updated by Day E 4/9/2026 */
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    margin: 18px 0;
+}
 
 /* Main navigation */
 .nav-section {

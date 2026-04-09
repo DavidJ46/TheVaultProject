@@ -1,0 +1,273 @@
+/*
+    my_storefront.css
+
+    The Vault Campus Marketplace 
+    CSC 405 Sp 26'
+    Created by Day Ekoi - Iteration 4 - 3/22/2026
+    Fully Integrated and Updated by Day Ekoi - Iteration 5 - 4/9/2026
+
+
+Description:
+This file controls the styling and layout of the My Storefront page.
+It styles the seller dashboard view including the banner, overlapping logo,
+brand name, action buttons, and listing grid.
+
+Works with:
+- my_storefront.html
+- my_storefront.js
+*/
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* page base: background, font, and text color */
+body {
+    background-color: #5b5b5b;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+}
+
+
+/* main dashboard wrapper */
+.storefront-dashboard {
+    width: min(1280px, 94%);
+    margin: 0 auto;
+    padding: 1rem 0 3rem;
+}
+
+
+/* banner section: holds title, banner, and overlapping logo */
+.banner-section {
+    position: relative;
+    margin-bottom: 8rem;
+}
+
+
+/* page title */
+.dashboard-title {
+    text-align: center;
+    font-size: 2.8rem;
+    font-style: italic;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+
+/* banner box */
+.banner-box {
+    width: 100%;
+    min-height: 270px;
+    background: #000000;
+    border: 3px solid #d4af37;
+    border-radius: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* text inside banner */
+.banner-box p {
+    font-size: 3.8rem;
+    font-weight: 800;
+}
+
+
+/* logo circle: overlaps lower-left area of banner */
+.logo-circle {
+    position: absolute;
+    left: 2rem;
+    bottom: -5.5rem;
+
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    border: 5px solid #000000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* logo text */
+.logo-circle p {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: black;
+}
+
+
+/* store info row: brand name on left, buttons on right */
+.store-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+
+/* brand info block */
+.brand-info {
+    padding-left: 1rem;
+}
+
+
+/* brand name text */
+.brand-name {
+    font-size: 3rem;
+    font-style: italic;
+    font-weight: 800;
+    color: white;
+}
+
+
+/* button row */
+.dashboard-actions {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+
+/* shared action button styling */
+.action-btn {
+    background: #d4af37;
+    color: black;
+    border: 5px solid white;
+    border-radius: 999px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+/* button hover */
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+
+/* listings section */
+.listings-section {
+    margin-top: 2rem;
+}
+
+
+/* listings grid */
+.listing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+}
+
+
+/* listing card placeholder */
+.listing-card {
+    min-height: 280px;
+    background: #f2f2f2;
+    border: 5px solid #000000;
+    border-radius: 34px;
+}
+
+
+/* tablet */
+@media (max-width: 1100px) {
+    .listing-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .store-info-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-actions {
+        justify-content: flex-start;
+    }
+}
+
+
+/* smaller tablet */
+@media (max-width: 850px) {
+    .listing-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .banner-box p {
+        font-size: 2.8rem;
+    }
+
+    .logo-circle {
+        width: 180px;
+        height: 180px;
+        bottom: -4.5rem;
+    }
+
+    .logo-circle p {
+        font-size: 2rem;
+    }
+
+    .brand-name {
+        font-size: 2.4rem;
+    }
+}
+
+
+/* mobile */
+@media (max-width: 600px) {
+    .dashboard-title {
+        font-size: 2rem;
+    }
+
+    .banner-box {
+        min-height: 200px;
+    }
+
+    .banner-box p {
+        font-size: 2.1rem;
+        text-align: center;
+        padding: 0 1rem;
+    }
+
+    .logo-circle {
+        width: 140px;
+        height: 140px;
+        left: 1rem;
+        bottom: -3.5rem;
+    }
+
+    .logo-circle p {
+        font-size: 1.6rem;
+    }
+
+    .brand-name {
+        font-size: 2rem;
+    }
+
+    .listing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .action-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .dashboard-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+}

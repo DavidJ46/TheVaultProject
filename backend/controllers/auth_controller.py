@@ -1,5 +1,5 @@
 # By Ryan Grimes - Updated 3/19/2026
-from flask import Blueprint, request, session, redirect, url_for, render_template, flash
+from flask import Blueprint, request, session, redirect, url_for, render_template, flash, jsonify
 from services.auth_services import AuthService 
 from config.db import get_connection
 
@@ -17,11 +17,24 @@ def login():
             return "Database connection failed. <a href='/auth/login'>Try again</a>"
 
         success, role = service.validate_login(user, pw, conn)
-        conn.close()
+        # conn.close()
         
         if success:
             session['user'] = user
             session['role'] = role
+
+            #store user_id in sesion for storefront ownership checks - added by Day E 4/9/26
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT id FROM users WHERE username = %s", (user,))
+                row = cur.fetchone()
+                if row:
+                    session['user_id'] = row[0] # Store user_id in session
+            except Exception as e:
+                print(f"Error fetching user_id for session: {e}")
+
+                conn.close()
+
             #return redirect(url_for('auth.listings'))
             # Redirect based on role - added by David Jackson 3/23/2026
             if role and role.lower() == 'admin':
@@ -117,3 +130,32 @@ def remove_from_cart(index):
             session.modified = True
             flash(f"Removed {removed_item['name']} from bag.", "info")
     return redirect(url_for('auth.view_cart'))
+
+# Added by Day E 4/9/26 - returns current session user info for frontend auth checks
+@auth_bp.route('/api/auth/me')
+def get_current_session_user():
+    if 'user' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT id, username, role FROM users WHERE username = %s", (session['user'],))
+        user = cur.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "id": user[0],
+            "username": user[1],
+            "role": user[2]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@auth_bp.route('/debug/session')
+def debug_session():
+    return jsonify(dict(session))

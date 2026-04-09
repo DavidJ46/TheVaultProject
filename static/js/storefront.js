@@ -280,7 +280,47 @@ if (navOverlay) { // Updated by Day E 3/22/26
 console.log(storefronts); // logs the storefronts array to the console for debugging purposes
 console.log(grid); // logs the storefront grid element to the console for debugging purposes
 
-/* Initial render of the storefront cards. This will display the storefronts on the page when it is first loaded. 
-fetchStorefronts(); */
+// SEARCH BAR FUNCTIONALITY
+// Added by Day E 4/9/26
+// filters storefront cards in real time as the user types in the search bar
 
-renderStorefronts(); // Updated by Day E 3/22/26
+const searchInput = document.getElementById("searchInput");
+
+// filters storefronts by name based on search input
+function filterStorefronts(query) {
+    const filtered = storefronts.filter(store =>
+        store.name.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // render filtered results
+    grid.innerHTML = "";
+
+    if (!filtered.length) {
+        grid.innerHTML = `<p style="color:#c9c9c9; font-style:italic; text-align:center; grid-column:1/-1; padding: 2rem;">No storefronts found for "${query}"</p>`;
+        return;
+    }
+
+    filtered.forEach(store => {
+        const card = createCard(store);
+        grid.appendChild(card);
+    });
+}
+
+//  input changes
+if (searchInput) {
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            renderStorefronts(); // show all if search is cleared
+        } else {
+            filterStorefronts(query);
+        }
+    });
+}
+
+/* Initial render of the storefront cards. This will display the storefronts on the page when it is first loaded. */
+fetchStorefronts(); // Updated by Day E 4/9/26 - this will now fetch real storefront data from the Flask API and then render the storefronts. If the API route is not ready or fails, it will fallback to rendering the placeholder storefronts. */
+
+/* renderStorefronts(); // Updated by Day E 3/22/26 */
+
+

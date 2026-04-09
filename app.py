@@ -48,6 +48,13 @@ def create_app():
     @app.route('/checkout')
     def checkout():
         return render_template('checkout.html')
+    
+    # Route to My Storefront dashboard page - Updated 4/9/2026
+    @app.route('/my-storefront')
+    def my_storefront():
+        if not session.get("user"):
+            return redirect(url_for("auth.login"))
+        return render_template('my_storefront.html')
 
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')

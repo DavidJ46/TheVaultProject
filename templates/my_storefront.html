@@ -1,0 +1,72 @@
+<!--
+ my_storefront.html
+
+    The Vault Campus Marketplace 
+    CSC 405 Sp 26'
+    Created by Day Ekoi - Iteration 4 3/22/2026
+    Implemented & Updated by Day Ekoi - Iteration 5 4/9/26
+
+Description of file (What it does, how it is used, etc):
+This file is the seller storefront dashboard page for users who already have a storefront.
+It allows the seller to view their storefront banner, logo, brand name, and their current listings.
+
+This page also includes action buttons that let the seller:
+- Edit their storefront
+- Create a new listing
+- View their public storefront
+
+This file acts as the UI structure for the seller's personal storefront management page.
+It is different from the public storefront page because this version is meant for the storefront owner.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Storefront</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/my_storefront.css') }}">
+</head>
+
+<body>
+    <main class="storefront-dashboard">
+
+        <!-- Banner section -->
+        <section class="banner-section">
+            <h1 class="dashboard-title">My Storefront</h1>
+
+            <!-- banner — background image set by JS if available -->
+            <div class="banner-box" id="bannerBox">
+                <p id="bannerFallback">Storefront Banner</p>
+            </div>
+
+            <!-- overlapping logo -->
+            <div class="logo-circle" id="logoCircle">
+                <img id="logoImg" alt="Store Logo" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                <p id="logoFallback">Logo</p>
+            </div>
+        </section>
+
+        <!-- Store info + action buttons -->
+        <section class="store-info-row">
+            <div class="brand-info">
+                <h2 class="brand-name" id="brandName">Loading...</h2>
+            </div>
+
+            <div class="dashboard-actions">
+                <button class="action-btn" id="editStorefrontBtn">Edit Storefront</button>
+                <button class="action-btn" id="createListingBtn">+ Create New Listing</button>
+                <button class="action-btn" id="viewStorefrontBtn">View Public Storefront</button>
+            </div>
+        </section>
+
+        <!-- Listings section -->
+        <section class="listings-section">
+            <div class="listing-grid" id="listingGrid"></div>
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/my_storefront.js') }}"></script>
+</body>
+</html>

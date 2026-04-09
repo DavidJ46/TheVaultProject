@@ -56,10 +56,15 @@ Start of Code w/ comments
 <div id="navOverlay" class="nav-overlay"></div>
 
 <aside id="navPane" class="nav-pane">
+  
 
   <!-- Top half button and actions -->
-  <div class="nav-top">
-    <!-- <button class="create-btn">Create Storefront</button> -->
+
+ 
+ <!--  -- OLD VERSION --
+  
+ <div class="nav-top">
+    -- <button class="create-btn">Create Storefront</button> --
      <a href="{{ url_for('storefront_pages_bp.create_storefront_page') }}">
   <button class="create-btn">Create Storefront</button>
 </a>
@@ -67,6 +72,22 @@ Start of Code w/ comments
   <button class="create-btn">Create Listing</button>
 </a>
   </div>
+-->
+
+<!-- UPDATED VERSION : Day E 4/9/26 -->
+
+<div class="nav-top">
+    <a href="{{ url_for('storefront_pages_bp.create_storefront_page') }}">
+        <button class="create-btn">Create Storefront</button>
+    </a>
+    <a href="{{ url_for('create_listing') }}">
+        <button class="create-btn">Create Listing</button>
+    </a>
+    <a href="/my-storefront">
+        <button class="create-btn my-storefront-btn">My Storefront</button>
+</a>
+    <hr class="nav-divider">
+</div>
 
   <!-- Main navigation -->
   <div class="nav-section">

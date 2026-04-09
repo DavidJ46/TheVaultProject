@@ -187,3 +187,11 @@ def deactivate_storefront_route(storefront_id):
         if "not found" in msg:
             return jsonify({"error": str(e)}), 404
         return jsonify({"error": str(e)}), 400
+
+# Added by Day E 4/9/26 - My Storefront dashboard page
+@storefront_pages_bp.route("/storefronts/dashboard")
+def my_storefront_dashboard():
+    from flask import session, redirect, url_for
+    if not session.get("user_id"):
+        return redirect(url_for("auth.login"))
+    return render_template("my_storefront.html")
