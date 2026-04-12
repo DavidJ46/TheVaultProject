@@ -30,9 +30,11 @@ def login():
                 row = cur.fetchone()
                 if row:
                     session['user_id'] = row[0] # Store user_id in session
+                    session['cart'] = service.get_user_cart(conn, row[0]) # Load user's cart into session on login
+                    cur.close()
             except Exception as e:
                 print(f"Error fetching user_id for session: {e}")
-
+            finally:
                 conn.close()
 
             #return redirect(url_for('auth.listings'))
@@ -92,41 +94,70 @@ def view_cart():
 
 @auth_bp.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
-    # Capture the details from the form
+    if 'user_id' not in session:
+        flash("Please login to add items to your bag.", "error")
+        return redirect(url_for('auth.login'))
+
     item_id = request.form.get('item_id')
     item_name = request.form.get('item_name')
     price = request.form.get('price', 0)
     quantity = request.form.get('quantity', 1)
     size = request.form.get('size')
 
-    # Initialize the cart in the session if it doesn't exist
+    # PERSIST TO DATABASE
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO cart_items (user_id, item_id, item_name, price, quantity, size)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (session['user_id'], item_id, item_name, price, quantity, size))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"DB Error adding to cart: {e}")
+
+    # Update session for immediate UI feedback
     if 'cart' not in session:
         session['cart'] = []
-
-    # Create the item object
-    cart_item = {
-        'id': item_id,
-        'name': item_name,
-        'price': float(price),
-        'quantity': int(quantity),
-        'size': size
-    }
-
+    
+    cart_item = {'id': item_id, 'name': item_name, 'price': float(price), 'quantity': int(quantity), 'size': size}
     temp_cart = session['cart']
     temp_cart.append(cart_item)
     session['cart'] = temp_cart
     session.modified = True
 
-    flash(f"Added {item_name} (Size: {size}) to your cart!", "success")
+    flash(f"Added {item_name} to your bag!", "success")
     return redirect(url_for('auth.view_cart'))
 
 @auth_bp.route('/remove_from_cart/<int:index>', methods=['POST'])
 def remove_from_cart(index):
-    if 'cart' in session:
-        cart = session['cart']
-        if 0 <= index < len(cart):
-            removed_item = cart.pop(index)
-            session['cart'] = cart
+    if 'cart' in session and 'user_id' in session:
+        temp_cart = session['cart']
+        if 0 <= index < len(temp_cart):
+            removed_item = temp_cart.pop(index)
+            
+            # REMOVE FROM DATABASE
+            try:
+                conn = get_connection()
+                cur = conn.cursor()
+                # We delete one instance of this item for this user
+                cur.execute("""
+                    DELETE FROM cart_items 
+                    WHERE id = (
+                        SELECT id FROM cart_items 
+                        WHERE user_id = %s AND item_name = %s AND size = %s
+                        LIMIT 1
+                    )
+                """, (session['user_id'], removed_item['name'], removed_item['size']))
+                conn.commit()
+                cur.close()
+                conn.close()
+            except Exception as e:
+                print(f"DB Error removing item: {e}")
+
+            session['cart'] = temp_cart
             session.modified = True
             flash(f"Removed {removed_item['name']} from bag.", "info")
     return redirect(url_for('auth.view_cart'))

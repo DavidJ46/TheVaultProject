@@ -201,6 +201,29 @@ def create_vault_tables():
         """
         cur.execute(create_wishlist_table)
 
+        # ________________________________________________________
+        # CART ITEMS TABLE (Persistent Bag)
+        # Added by Ryan Grimes 4/12/26
+        # ________________________________________________________
+        create_cart_items_table = """
+            CREATE TABLE IF NOT EXISTS cart_items (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                item_id INTEGER,
+                item_name VARCHAR(255) NOT NULL,
+                price NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+                quantity INTEGER NOT NULL DEFAULT 1,
+                size VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                CONSTRAINT fk_cart_user
+                    FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+        """
+        cur.execute(create_cart_items_table)
+
         conn.commit()
 
         print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, listing_sizes, purchases, and wishlist tables are ready.")
