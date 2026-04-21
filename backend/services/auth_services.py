@@ -49,10 +49,10 @@ class AuthService:
             print(f"Service Error: Could not fetch cart: {e}")
             return []
 
-def clear_user_cart(self, db_conn, user_id): #Removes all items from the database bag (useful after checkout).
-    try:
-        cur = db_conn.cursor()
-        cur.execute("DELETE FROM cart_items WHERE user_id = %s", (user_id,))
-        db_conn.commit()
-    except Exception as e:
-        print(f"Service Error: Could not clear cart: {e}")
+    def clear_user_cart(self, db_conn, user_id): #Removes all items from the database bag (useful after checkout).
+        try:
+            cur = db_conn.cursor()
+            cur.execute("DELETE FROM cart_items WHERE user_id = %s", (user_id,))
+            db_conn.commit()
+        except Exception as e:
+            print(f"Service Error: Could not clear cart: {e}")

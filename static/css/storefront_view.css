@@ -2,8 +2,8 @@
 
     The Vault Campus Marketplace 
     CSC 405 Sp 26'
-    Created by Day Ekoi - Iteration 4
-    3/22/2026
+    Created by Day Ekoi - Iteration 4 - 3/22/2026
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - styling updates to storefront view page, including back button, profile info row, and listing cards
 
 
 Description:
@@ -43,65 +43,95 @@ body {
     padding: 0.25rem 0 3rem;
 }
 
+/* back arrow row above banner - Updated by Day Ekoi 4/20/26 */
+.back-row {
+    margin-bottom: 0.6rem;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(212,175,55,0.5);
+    border-radius: 999px;
+    color: #d4af37;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(212,175,55,0.15);
+    color: #f0cc55;
+}
+
 .storefront-top {
     position: relative;
-    margin-bottom: 6.5rem;
+    margin-bottom: 2rem;
 }
 
 .storefront-banner {
     width: 100%;
-    min-height: 280px;
+    min-height: 260px;
     background: rgba(0, 0, 0, 0.84);
     border: 1px solid #d4af37;
-    border-radius: 2px;
+    border-radius: 8px;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     box-shadow: 0 0 25px rgba(184, 134, 11, 0.18);
     overflow: hidden;
+    background-size: cover;
+    background-position: center;
 }
 
-.back-btn {
-    position: absolute;
-    left: 1.4rem;
-    top: 1.4rem;
-    background: transparent;
-    border: none;
-    color: rgba(204, 178, 128, 0.75);
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
+/* Profile info row - tightened by Day Ekoi 4/20/26 */
+.profile-info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-left: calc(170px + 2.5rem);
+    padding-right: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
 }
 
-.back-btn:hover {
-    color: #d4af37;
-}
-
-.banner-text-wrap {
-    text-align: center;
-    width: 100%;
-    padding: 1rem 2rem;
+.profile-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .brand-name {
-    font-size: 3.2rem;
+    font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 0.8rem;
     color: white;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.2;
 }
 
 .contact-info {
-    font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    color: #d4af37;
+    line-height: 1.3;
+}
+
+.store-bio {
+    font-size: 0.88rem;
+    color: #c9c9c9;
+    max-width: 560px;
+    line-height: 1.4;
 }
 
 .storefront-logo {
     position: absolute;
     left: 2rem;
-    bottom: -4.5rem;
+    bottom: -3rem;
     width: 170px;
     height: 170px;
     border-radius: 50%;
@@ -120,31 +150,6 @@ body {
     color: black;
 }
 
-.store-description-section {
-    width: min(1100px, 94%);
-    margin: 0 auto 2.5rem;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.84);
-    border: 1px solid #d4af37;
-    border-radius: 2px;
-    padding: 2rem 2.5rem;
-    box-shadow: 0 0 25px rgba(184, 134, 11, 0.14);
-}
-
-.store-description-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    color: white;
-}
-
-.store-description-text {
-    width: min(900px, 95%);
-    margin: 0 auto;
-    font-size: 1.06rem;
-    line-height: 1.7;
-    color: #f2f2f2;
-}
 
 .storefront-listings-section {
     width: min(1100px, 94%);

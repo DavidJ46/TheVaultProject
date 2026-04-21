@@ -141,11 +141,10 @@ function createListingCard(item, wishlistIds, currentUserId) {
     const price = typeof item.price === "string" && item.price.includes("$")
         ? item.price
         : `$${Number(item.price || 0).toFixed(2)}`;
-    const imageUrl = item.image_url || "/static/images/logo.png";
-    const isWishlisted = wishlistIds.has(String(listingId));
+    const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
 
     card.innerHTML = `
-        <img class="listing-image" src="${imageUrl}" alt="${title}">
+        ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
         <div class="listing-info">
             <div class="listing-copy">
                 <span class="item-name">${title}</span>
@@ -254,20 +253,21 @@ async function loadStorefrontView() {
             document.getElementById("storefrontBanner").style.backgroundPosition = "center";
         }
 
-        // show edit button if user owns this storefront and preload wishlist state
-        const sessionUser = await getCurrentSessionUser();
-        if (sessionUser?.id && storefront.owner_id && Number(sessionUser.id) === Number(storefront.owner_id)) {
-            const editBtn = document.createElement("button");
-            editBtn.className = "back-btn";
-            editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
-            editBtn.textContent = "Edit Storefront";
-            editBtn.onclick = () => {
-                window.location.href = `/storefronts/${storefrontId}/edit`;
-            };
-            document.getElementById("storefrontBanner").appendChild(editBtn);
+        // show edit button if user owns this storefront
+        const sessionRes = await fetch("/api/auth/me");
+        if (sessionRes.ok) {
+            const sessionUser = await sessionRes.json();
+            if (sessionUser.id && storefront.owner_id && sessionUser.id === storefront.owner_id) {
+                const editBtn = document.createElement("button");
+                editBtn.className = "back-btn";
+                editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
+                editBtn.textContent = "Edit Storefront";
+                editBtn.onclick = () => {
+                    window.location.href = `/storefronts/${storefrontId}/edit`;
+                };
+                document.getElementById("storefrontBanner").appendChild(editBtn);
+            }
         }
-
-        const wishlistIds = await getWishlistIdSet(sessionUser?.id);
 
         // fetch listings for this storefront
         const listRes = await fetch(`/api/storefronts/${storefrontId}/listings`);

@@ -2,6 +2,7 @@
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3 
 # Dates: 2/25-2/26
+# Updated by Day Ekoi - Iteration 5 4/10/26 - S3 image upload integration
 
 """
 controllers/listing_controller.py
@@ -83,9 +84,7 @@ def create_listing_from_form():
     - listing_image: image file upload
     """
     import json
-    import os
-    from werkzeug.utils import secure_filename
-    
+
     current_user = get_current_user()
     if current_user is None:
         return jsonify({"error": "Unauthorized: missing/invalid X-User-Id"}), 401
@@ -95,7 +94,7 @@ def create_listing_from_form():
         user_storefront = get_my_storefront_service(current_user)
         if user_storefront is None:
             return jsonify({"error": "You must create a storefront before creating listings."}), 400
-        
+
         # Get form fields
         title = request.form.get("title", "").strip()
         storefront_id = user_storefront["id"]
@@ -117,27 +116,23 @@ def create_listing_from_form():
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid sizes_available format."}), 400
 
-        # Handle file upload
+        # Handle file upload - Updated by Day E 4/10/26 - S3 upload
         image_url = None
         if "listing_image" in request.files and request.files["listing_image"].filename:
             file = request.files["listing_image"]
-            
-            # Validate file
+
+            # Validate file type
             if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                 return jsonify({"error": "Image must be PNG, JPG, JPEG, GIF, or WebP."}), 400
-            
-            # Save file
+
+            # Upload to S3 - Updated by Day E 4/10/26
             try:
-                filename = secure_filename(f"listing_{storefront_id}_{os.urandom(8).hex()}_{file.filename}")
-                images_dir = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), "..", "..", "static", "images")
-                )
-                os.makedirs(images_dir, exist_ok=True)
-                file_path = os.path.join(images_dir, filename)
-                file.save(file_path)
-                image_url = f"/static/images/{filename}"
+                from utils.s3 import upload_image_to_s3
+                image_url = upload_image_to_s3(file, folder="listings")
+                if not image_url:
+                    return jsonify({"error": "Failed to upload image to S3."}), 500
             except Exception as e:
-                return jsonify({"error": f"Error saving image: {str(e)}"}), 500
+                return jsonify({"error": f"Error uploading image to S3: {str(e)}"}), 500
         else:
             return jsonify({"error": "listing_image is required."}), 400
 
@@ -165,8 +160,7 @@ def create_listing_from_form():
         # Add sizes to listing
         for size in sizes_available:
             try:
-                # Split quantity equally among sizes, or use full quantity for each size
-                size_quantity = quantity_on_hand  # Could be changed to split quantity
+                size_quantity = quantity_on_hand
                 upsert_listing_size_service(current_user, listing["id"], size, size_quantity)
             except Exception as e:
                 print(f"Warning: Failed to add size {size} to listing: {str(e)}")
