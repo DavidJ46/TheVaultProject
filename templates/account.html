@@ -164,9 +164,25 @@
 </div>
 
 <script>
-    function getCurrentUserId() {
+    async function getCurrentUserId() {
         const storedUserId = localStorage.getItem("vaultUserId") || sessionStorage.getItem("vaultUserId");
-        return storedUserId || "1";
+        if (storedUserId) return storedUserId;
+
+        try {
+            const response = await fetch("/auth/api/auth/me");
+            if (!response.ok) return null;
+
+            const user = await response.json();
+            if (user?.id) {
+                localStorage.setItem("vaultUserId", String(user.id));
+                sessionStorage.setItem("vaultUserId", String(user.id));
+                return String(user.id);
+            }
+        } catch (error) {
+            console.error("Unable to resolve current user id:", error);
+        }
+
+        return null;
     }
 
     function openTab(evt, tabName) {
@@ -193,20 +209,39 @@
         }
     }
 
+    function normalizeWishlistItem(item) {
+        return {
+            listing_id: Number(item.listing_id || item.id),
+            title: item.title || item.name || item.listing?.title || "Untitled Listing",
+            price: item.price ?? item.listing?.price ?? 0,
+            image_url: item.image_url || item.listing?.image_url || item.storefront?.logo_url || "/static/images/logo.png",
+            storefront_name: item.storefront_name || item.storefront?.brand_name || "Storefront"
+        };
+    }
+
     function setLocalWishlistItems(items) {
-        localStorage.setItem("vaultWishlistLocalItems", JSON.stringify(items));
-        localStorage.setItem("vaultWishlistListingIds", JSON.stringify(items.map((i) => String(i.listing_id))));
+        const normalized = (items || []).map(normalizeWishlistItem);
+
+        localStorage.setItem("vaultWishlistLocalItems", JSON.stringify(normalized));
+        localStorage.setItem("vaultWishlistListingIds", JSON.stringify(normalized.map((i) => String(i.listing_id))));
+        return normalized;
+    }
+
+    function formatWishlistPrice(price) {
+        if (typeof price === "string" && price.includes("$")) return price;
+        return `$${Number(price || 0).toFixed(2)}`;
     }
 
     function renderWishlist(items) {
         const container = document.getElementById("wishlistItemsContainer");
         const emptyState = document.getElementById("wishlistEmptyState");
+        const normalizedItems = (items || []).map(normalizeWishlistItem);
 
         if (!container || !emptyState) return;
 
         container.innerHTML = "";
 
-        if (!items.length) {
+        if (!normalizedItems.length) {
             emptyState.textContent = "Your wishlist is currently empty.";
             emptyState.style.display = "block";
             return;
@@ -214,33 +249,87 @@
 
         emptyState.style.display = "none";
 
-        items.forEach((item) => {
+        normalizedItems.forEach((item) => {
             const row = document.createElement("div");
             row.className = "wishlist-row";
             row.innerHTML = `
                 <div class="wishlist-left">
-                    <img class="wishlist-thumb" src="${item.image_url || "/static/images/placeholder-storefront.png"}" alt="${item.title || "Wishlist item"}">
+                    <img class="wishlist-thumb" src="${item.image_url || "/static/images/logo.png"}" alt="${item.title || "Wishlist item"}">
                     <div>
                         <div class="wishlist-title">${item.title || "Untitled Listing"}</div>
-                        <div class="wishlist-meta">${item.storefront_name || "Storefront"} | ${item.price || "$0.00"}</div>
+                        <div class="wishlist-meta">${item.storefront_name || "Storefront"} | ${formatWishlistPrice(item.price)}</div>
                     </div>
                 </div>
                 <button class="wishlist-remove-btn" type="button">Remove</button>
             `;
 
             const removeBtn = row.querySelector(".wishlist-remove-btn");
-            removeBtn.addEventListener("click", () => {
-                const updated = getLocalWishlistItems().filter((x) => String(x.listing_id) !== String(item.listing_id));
-                setLocalWishlistItems(updated);
-                renderWishlist(updated);
+            removeBtn.addEventListener("click", async () => {
+                removeBtn.disabled = true;
+
+                try {
+                    const userId = await getCurrentUserId();
+                    if (userId) {
+                        const response = await fetch(`/api/wishlist/${Number(item.listing_id || item.id)}`, {
+                            method: "DELETE",
+                            headers: {
+                                "X-User-Id": String(userId)
+                            }
+                        });
+
+                        const result = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw new Error(result.error || "Failed to remove wishlist item");
+                        }
+                    }
+
+                    const updated = getLocalWishlistItems().filter((x) => String(x.listing_id || x.id) !== String(item.listing_id || item.id));
+                    setLocalWishlistItems(updated);
+                    renderWishlist(updated);
+                } catch (error) {
+                    console.error("Unable to remove wishlist item:", error);
+                    alert("Unable to remove wishlist item: " + error.message);
+                    removeBtn.disabled = false;
+                }
             });
 
             container.appendChild(row);
         });
     }
 
-    function loadWishlist() {
-        renderWishlist(getLocalWishlistItems());
+    async function loadWishlist() {
+        const emptyState = document.getElementById("wishlistEmptyState");
+
+        try {
+            if (emptyState) {
+                emptyState.textContent = "Loading your wishlist...";
+                emptyState.style.display = "block";
+            }
+
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                renderWishlist(getLocalWishlistItems());
+                return;
+            }
+
+            const response = await fetch("/api/wishlist", {
+                headers: {
+                    "X-User-Id": String(userId)
+                }
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to load wishlist");
+            }
+
+            const items = Array.isArray(data.wishlist) ? data.wishlist : [];
+            const normalizedItems = setLocalWishlistItems(items);
+            renderWishlist(normalizedItems);
+        } catch (error) {
+            console.error("Error loading wishlist:", error);
+            renderWishlist(getLocalWishlistItems());
+        }
     }
 
     function renderMyListings(listings) {
@@ -287,10 +376,11 @@
                     deleteBtn.disabled = true;
 
                     try {
+                        const userId = await getCurrentUserId();
                         const response = await fetch(`/api/listings/${item.id}`, {
                             method: "DELETE",
                             headers: {
-                                "X-User-Id": getCurrentUserId()
+                                "X-User-Id": userId || ""
                             }
                         });
 
@@ -316,9 +406,10 @@
         const emptyState = document.getElementById("listingsEmptyState");
 
         try {
+            const userId = await getCurrentUserId();
             const response = await fetch("/api/listings/my", {
                 headers: {
-                    "X-User-Id": getCurrentUserId()
+                    "X-User-Id": userId || ""
                 }
             });
 
