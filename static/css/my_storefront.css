@@ -25,12 +25,16 @@ Works with:
 }
 
 
-/* page base: background, font, and text color */
+/* page base - Updated by Day Ekoi 4/20/26 - vault background to match other pages */
 body {
-    background-color: #5b5b5b;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.58)),
+        url("/static/images/background.png") no-repeat center center fixed;
+    background-size: cover;
     color: white;
     font-family: Arial, Helvetica, sans-serif;
     min-height: 100vh;
+    padding: 28px 0 40px;
 }
 
 
@@ -42,121 +46,164 @@ body {
 }
 
 
-/* banner section: holds title, banner, and overlapping logo */
-.banner-section {
-    position: relative;
-    margin-bottom: 8rem;
+/* back button - Added by Day Ekoi 4/20/26 */
+.back-row {
+    margin-bottom: 0.6rem;
 }
 
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(212,175,55,0.5);
+    border-radius: 999px;
+    color: #d4af37;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(212,175,55,0.15);
+    color: #f0cc55;
+}
+
+/* banner section - Updated by Day Ekoi 4/20/26 - Facebook/Twitter profile layout */
+.banner-section {
+    position: relative;
+    margin-bottom: 2.5rem;
+}
 
 /* page title */
 .dashboard-title {
     text-align: center;
-    font-size: 2.8rem;
+    font-size: 2.2rem;
     font-style: italic;
     font-weight: 800;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
 }
 
-
-/* banner box */
+/* banner box - edge-to-edge, minimal radius like Facebook cover photo */
 .banner-box {
     width: 100%;
-    min-height: 270px;
-    background: #000000;
-    border: 3px solid #d4af37;
-    border-radius: 26px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    min-height: 240px;
+    background: rgba(0,0,0,0.84);
+    border: 1px solid #d4af37;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 0 25px rgba(184,134,11,0.18);
 }
 
-
-/* text inside banner */
+/* hide fallback text when banner image loads */
 .banner-box p {
-    font-size: 3.8rem;
-    font-weight: 800;
+    display: none;
 }
 
-
-/* logo circle: overlaps lower-left area of banner */
+/* logo circle: overlaps bottom-left of banner halfway - Facebook style */
 .logo-circle {
     position: absolute;
     left: 2rem;
-    bottom: -5.5rem;
+    bottom: -4rem;
 
-    width: 230px;
-    height: 230px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
-    background: #f2f2f2;
-    border: 5px solid #000000;
+    background: #1a1a1a;
+    border: 4px solid #d4af37;
+    overflow: hidden;
 
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-
-/* logo text */
+/* logo fallback text */
 .logo-circle p {
-    font-size: 2.8rem;
+    font-size: 1.4rem;
     font-weight: 800;
-    color: black;
+    color: #888;
 }
 
 
-/* store info row: brand name on left, buttons on right */
+/* Profile info section - Updated by Day Ekoi 4/20/26
+   Offset left to clear the overlapping logo */
 .store-info-row {
+    padding-left: calc(160px + 3rem);
+    margin-bottom: 2rem;
+}
+
+/* name LEFT, buttons RIGHT — same row */
+.name-btn-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+    flex-wrap: wrap;
 }
 
-
-/* brand info block */
-.brand-info {
-    padding-left: 1rem;
-}
-
-
-/* brand name text */
+/* brand name */
 .brand-name {
-    font-size: 3rem;
+    font-size: 2rem;
     font-style: italic;
     font-weight: 800;
     color: white;
+    margin: 0;
 }
 
+/* contact info below name */
+.store-contact {
+    color: #d4af37;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
 
-/* button row */
+/* bio below contact */
+.store-bio {
+    color: #c9c9c9;
+    font-size: 0.88rem;
+    max-width: 600px;
+    line-height: 1.5;
+}
+
+/* buttons inside the name-btn-row */
 .dashboard-actions {
     display: flex;
-    gap: 1.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    align-items: center;
 }
 
 
-/* shared action button styling */
+/* shared action button styling - Updated by Day Ekoi 4/20/26 - matches back button pill */
 .action-btn {
-    background: #d4af37;
-    color: black;
-    border: 5px solid white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(212,175,55,0.5);
     border-radius: 999px;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-    font-weight: 800;
+    color: #d4af37;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: background 0.2s, color 0.2s;
 }
 
 
 /* button hover */
 .action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+    background: rgba(212,175,55,0.15);
+    color: #f0cc55;
 }
 
 
@@ -189,13 +236,9 @@ body {
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .store-info-row {
+    .name-btn-row {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .dashboard-actions {
-        justify-content: flex-start;
     }
 }
 
@@ -261,13 +304,8 @@ body {
         grid-template-columns: 1fr;
     }
 
-    .action-btn {
-        width: 100%;
-        text-align: center;
-    }
-
     .dashboard-actions {
         width: 100%;
-        flex-direction: column;
+        flex-wrap: wrap;
     }
 }

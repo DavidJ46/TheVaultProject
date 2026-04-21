@@ -11,6 +11,10 @@ Run this file manually when:
 - Ensuring the database schema is properly initialized
 """
 
+# The Vault Campus Marketplace
+# CSC 405 Sp 26'
+# Updated by Day Ekoi - Iteration 5 - 4/20/26 - added contact_info, preview_image_1-4, categories columns to storefronts; added ALTER TABLE migrations
+
 import psycopg2
 import os
 from dotenv import load_dotenv
@@ -47,6 +51,7 @@ def create_vault_tables():
         # ________________________________________________________
         # STOREFRONTS TABLE (One storefront per user)
         # Added by Day Ekoi 2/26/26
+        # Updated by Day Ekoi 4/20/26 - added contact_info, preview_image_1-4 columns
         # ________________________________________________________
         create_storefronts_table = """
             CREATE TABLE IF NOT EXISTS storefronts (
@@ -56,7 +61,12 @@ def create_vault_tables():
                 bio TEXT,
                 logo_url TEXT,
                 banner_url TEXT,
-                instagram_handle VARCHAR(50),
+                contact_info TEXT,
+                preview_image_1 TEXT,
+                preview_image_2 TEXT,
+                preview_image_3 TEXT,
+                preview_image_4 TEXT,
+                categories TEXT,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -68,6 +78,14 @@ def create_vault_tables():
             );
         """
         cur.execute(create_storefronts_table)
+
+        # Migrations for existing databases - Added by Day Ekoi 4/20/26
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS contact_info TEXT;")
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_1 TEXT;")
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_2 TEXT;")
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_3 TEXT;")
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_4 TEXT;")
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS categories TEXT;")
 
         # ________________________________________________________
         # LISTINGS TABLE (Each listing belongs to a storefront)

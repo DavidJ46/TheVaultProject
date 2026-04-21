@@ -1,6 +1,7 @@
 # The Vault Campus Marketplace
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3
+# Updated by Day Ekoi - Iteration 5 - 4/20/26 - added preview_image_1-4 passthrough in create and update services
 
 """
 storefront_service.py
@@ -63,6 +64,12 @@ def create_storefront_service(current_user, data):
         bio=data.get("bio"),
         logo_url=data.get("logo_url"),
         banner_url=data.get("banner_url"),
+        contact_info=data.get("contact_info"),
+        preview_image_1=data.get("preview_image_1"),
+        preview_image_2=data.get("preview_image_2"),
+        preview_image_3=data.get("preview_image_3"),
+        preview_image_4=data.get("preview_image_4"),
+        categories=data.get("categories"),
     )
 
 
@@ -97,7 +104,9 @@ def update_storefront_service(current_user, storefront_id, data):
         raise Exception("Unauthorized action.")
 
     # Only allow safe fields
-    allowed_fields = {"brand_name", "bio", "logo_url", "banner_url"}
+    allowed_fields = {"brand_name", "bio", "logo_url", "banner_url", "contact_info",
+                      "preview_image_1", "preview_image_2", "preview_image_3", "preview_image_4",
+                      "categories"}
 
     clean = {k: data.get(k) for k in allowed_fields}
 
@@ -112,6 +121,12 @@ def update_storefront_service(current_user, storefront_id, data):
         bio=clean.get("bio"),
         logo_url=clean.get("logo_url"),
         banner_url=clean.get("banner_url"),
+        contact_info=clean.get("contact_info"),
+        preview_image_1=clean.get("preview_image_1"),
+        preview_image_2=clean.get("preview_image_2"),
+        preview_image_3=clean.get("preview_image_3"),
+        preview_image_4=clean.get("preview_image_4"),
+        categories=clean.get("categories"),
     )
 
 

@@ -2,6 +2,7 @@
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3
 # Updated by Day Ekoi - Iteration 4 3/25/26
+# Updated by Day Ekoi - Iteration 5 - 4/20/26 - added edit storefront route, create listing route, S3 image upload endpoint, fixed session key
 
 """
 storefront_controller.py
@@ -80,6 +81,14 @@ def my_storefront_page():
 @storefront_pages_bp.route("/storefronts/<int:storefront_id>")
 def storefront_view_page(storefront_id):
     return render_template("storefront_view.html", storefront_id=storefront_id)
+
+
+@storefront_pages_bp.route("/listings/create")
+def create_listing_page():
+    from flask import session, redirect, url_for
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+    return render_template("create_listing.html")
 
 
 # ________________________________________________________
@@ -192,6 +201,34 @@ def deactivate_storefront_route(storefront_id):
 @storefront_pages_bp.route("/storefronts/dashboard")
 def my_storefront_dashboard():
     from flask import session, redirect, url_for
-    if not session.get("user_id"):
+    if not session.get("user"):
         return redirect(url_for("auth.login"))
     return render_template("my_storefront.html")
+
+
+@storefront_pages_bp.route("/storefronts/<int:storefront_id>/edit")
+def edit_storefront_page(storefront_id):
+    from flask import session, redirect, url_for
+    if not session.get("user"):
+        return redirect(url_for("auth.login"))
+    return render_template("edit_storefront.html", storefront_id=storefront_id)
+
+# Added by Day E 4/16/26 - handles image uploads to S3 for storefront creation
+@storefront_bp.post("/upload-image")
+def upload_storefront_image():
+    from utils.s3 import upload_image_to_s3
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    folder = request.form.get("folder", "storefronts")
+
+    if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+        return jsonify({"error": "Invalid file type"}), 400
+
+    url = upload_image_to_s3(file, folder=folder)
+    if not url:
+        return jsonify({"error": "Upload failed"}), 500
+
+    return jsonify({"url": url}), 200

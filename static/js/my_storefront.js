@@ -15,6 +15,8 @@ Handles Edit Storefront, Create Listing, and View Public Storefront routing.
 
 // get references
 const brandName = document.getElementById("brandName");
+const storeDescription = document.getElementById("storeDescription");
+const contactInfo = document.getElementById("contactInfo");
 const bannerBox = document.getElementById("bannerBox");
 const bannerFallback = document.getElementById("bannerFallback");
 const logoImg = document.getElementById("logoImg");
@@ -40,10 +42,10 @@ function createListingCard(item) {
 
     const title = item.title || item.name || "Untitled";
     const price = `$${Number(item.price || 0).toFixed(2)}`;
-    const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
+    const imageUrl = item.image_url || null;
 
     card.innerHTML = `
-        <img src="${imageUrl}" alt="${title}" style="width:100%; height:180px; object-fit:cover; border-radius:28px 28px 0 0;">
+        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%; height:180px; object-fit:cover; border-radius:28px 28px 0 0;">` : `<div style="width:100%; height:180px; border-radius:28px 28px 0 0; background:#1a1a1a;"></div>`}
         <div style="padding: 1rem;">
             <p style="font-weight:700; color:#000;">${title}</p>
             <p style="color:#B8860B; font-weight:700;">${price}</p>
@@ -90,8 +92,10 @@ async function loadMyStorefront() {
         const storefront = await sfRes.json();
         storefrontId = storefront.id;
 
-        // populate brand name
+        // populate brand name, bio, contact info - Updated by Day Ekoi 4/20/26
         brandName.textContent = storefront.brand_name || "My Storefront";
+        if (storefront.contact_info) contactInfo.textContent = storefront.contact_info;
+        if (storefront.bio) storeDescription.textContent = storefront.bio;
 
         // populate banner
         if (storefront.banner_url) {

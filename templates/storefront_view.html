@@ -1,11 +1,10 @@
 <!--
  storefront_view.html
-    The Vault Campus Marketplace 
+    The Vault Campus Marketplace
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4
     3/18/2026-3/22/2026
-The Vault Campus Marketplace
-Public storefront detail page rendered when a user clicks Enter Storefront.
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - Facebook-style layout, back arrow above banner, info moved below banner
 -->
 
 <!DOCTYPE html>
@@ -19,17 +18,20 @@ Public storefront detail page rendered when a user clicks Enter Storefront.
 <body>
 
 <main class="storefront-view-page">
-    <section class="storefront-top">
-        <div class="storefront-banner" id="storefrontBanner">
-   <button class="back-btn" id="backBtn"
-  onclick="window.location.href='/storefronts'">
-  &larr; CONTINUE SHOPPING
-</button>
-    <div class="banner-text-wrap">
-        <h1 class="brand-name" id="brandName">Loading...</h1>
-        <p class="contact-info" id="contactInfo"></p>
+
+    <!-- back arrow sits above the banner, always visible -->
+    <div class="back-row">
+        <button class="back-btn" onclick="window.location.href='/storefronts'">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Back
+        </button>
     </div>
-</div>
+
+    <!-- banner + overlapping logo -->
+    <section class="storefront-top">
+        <div class="storefront-banner" id="storefrontBanner"></div>
 
         <div class="storefront-logo" id="storefrontLogoWrap">
             <img id="storefrontLogo" alt="Storefront Logo" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
@@ -37,18 +39,23 @@ Public storefront detail page rendered when a user clicks Enter Storefront.
         </div>
     </section>
 
-    <section class="store-description-section">
-        <p class="store-description-title">Store Description</p>
-        <p class="store-description-text" id="storeDescription">Loading storefront details...</p>
+    <!-- profile info row: Facebook-style, below banner -->
+    <section class="profile-info-row">
+        <div class="profile-left">
+            <h1 class="brand-name" id="brandName">Loading...</h1>
+            <p class="contact-info" id="contactInfo"></p>
+            <p class="store-bio" id="storeDescription"></p>
+        </div>
     </section>
 
+    <!-- listings -->
     <section class="storefront-listings-section">
         <h3 class="listings-heading" id="listingsHeading">Listings</h3>
         <div class="listing-grid" id="listingGrid"></div>
     </section>
+
 </main>
 
 <script src="{{ url_for('static', filename='js/storefront_view.js') }}"></script>
-
 </body>
 </html>

@@ -47,10 +47,10 @@ function createListingCard(item) {
     const price = typeof item.price === "string" && item.price.includes("$")
         ? item.price
         : `$${Number(item.price || 0).toFixed(2)}`;
-    const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
+    const imageUrl = item.image_url || null;
 
     card.innerHTML = `
-        <img class="listing-image" src="${imageUrl}" alt="${title}">
+        ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
         <div class="listing-info">
             <span class="item-name">${title}</span>
             <span class="item-price">${price}</span>
@@ -96,19 +96,18 @@ async function loadStorefrontView() {
             document.getElementById("storefrontBanner").style.backgroundPosition = "center";
         }
 
-        // show edit button if user owns this storefront
+        // show edit button if user owns this storefront - Updated by Day Ekoi 4/20/26
         const sessionRes = await fetch("/api/auth/me");
         if (sessionRes.ok) {
             const sessionUser = await sessionRes.json();
             if (sessionUser.id && storefront.owner_id && sessionUser.id === storefront.owner_id) {
                 const editBtn = document.createElement("button");
-                editBtn.className = "back-btn";
-                editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
+                editBtn.style.cssText = "background:#d4af37; color:#000; border:none; border-radius:999px; padding:8px 20px; font-weight:700; font-size:0.9rem; cursor:pointer; letter-spacing:1px; text-transform:uppercase; align-self:flex-start; margin-top:4px;";
                 editBtn.textContent = "Edit Storefront";
                 editBtn.onclick = () => {
                     window.location.href = `/storefronts/${storefrontId}/edit`;
                 };
-                document.getElementById("storefrontBanner").appendChild(editBtn);
+                document.querySelector(".profile-info-row").appendChild(editBtn);
             }
         }
 
