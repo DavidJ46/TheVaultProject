@@ -1,0 +1,291 @@
+<!--
+Created by Kaila Roberts 4/18/26
+
+This file contains the UI structure for the Checkout screen. 
+
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+
+        .confirmation-container {
+            width: 100%;
+            max-width: 850px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+        }
+
+        .confirmation-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .confirmation-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+            color: #222;
+        }
+
+        .confirmation-header p {
+            margin: 0;
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .success-badge {
+            display: inline-block;
+            background-color: #e8f7ec;
+            color: #1f7a3d;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .section {
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: #222;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+        }
+
+        .detail-item strong {
+            display: block;
+            color: #444;
+            margin-bottom: 4px;
+        }
+
+        .detail-item span {
+            color: #666;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th,
+        .items-table td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .items-table th {
+            background-color: #fafafa;
+            color: #333;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .order-total {
+            margin-top: 18px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .button-row {
+            margin-top: 30px;
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+            transition: 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #222;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #000;
+        }
+
+        .btn-secondary {
+            background-color: #f1f1f1;
+            color: #222;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e4e4e4;
+        }
+
+        @media (max-width: 700px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .confirmation-container {
+                padding: 22px;
+            }
+
+            .items-table th,
+            .items-table td {
+                font-size: 0.95rem;
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="confirmation-container">
+
+            <div class="confirmation-header">
+                <div class="success-badge">Order Submitted</div>
+                <h1>Thank you for your purchase!</h1>
+                <p>Your order has been successfully processed.</p>
+            </div>
+
+            <div class="section">
+                <h2>Order Details</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <strong>Order ID</strong>
+                        <span>#{{ order.id }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Status</strong>
+                        <span>{{ order.order_status }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Order Date</strong>
+                        <span>{{ order.created_at }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Total Amount</strong>
+                        <span>${{ total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Customer Information</h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <strong>Name</strong>
+                        <span>{{ user_info.first_name }} {{ user_info.last_name }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Email</strong>
+                        <span>{{ user_info.email }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Phone Number</strong>
+                        <span>{{ user_info.phone_number }}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <strong>Shipping Address</strong>
+                        <span>
+                            {{ user_info.address_line_1 }}
+                            {% if user_info.address_line_2 %}
+                                , {{ user_info.address_line_2 }}
+                            {% endif %}
+                            <br>
+                            {{ user_info.city }}, {{ user_info.state }} {{ user_info.zip_code }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Items Purchased</h2>
+
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Size</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>{{ item.title if item.title else item.listing_id }}</td>
+                            <td>{{ item.selected_size if item.selected_size else "N/A" }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.price_at_purchase }}</td>
+                            <td class="text-right">
+                                ${{ "%.2f"|format(item.quantity * item.price_at_purchase) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="order-total">
+                    Total: ${{ total_amount }}
+                </div>
+            </div>
+
+            <div class="button-row">
+                <a href="/home" class="btn btn-primary">Return Home</a>
+                <a href="/listings" class="btn btn-secondary">Continue Shopping</a>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

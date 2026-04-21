@@ -6,14 +6,6 @@
     consistent branding across the purchase flow.
 */
 
-/* checkout.css
-    Derived from create_storefront.css for form consistency
-*/
-
-/* checkout.css
-    Theme: The Vault Premium Dark Mode
-    Matches branding established by Day Ekoi
-*/
 
 /* Base Page Styles */
 body {
@@ -37,7 +29,7 @@ body {
 
 .nav-link { text-decoration: none; } /* Removes default blue underline from links */
 
-/* THE "NICE" BACK BUTTON: Secondary style (Gold outline, transparent center) */
+/* THE BACK BUTTON: Secondary style (Gold outline, transparent center) */
 .secondary-btn {
     background: transparent;
     color: #d4af37;
