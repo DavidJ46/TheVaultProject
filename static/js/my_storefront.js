@@ -5,11 +5,12 @@
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4 - 3/22/2026
     Implemented & Updated by Day Ekoi - Iteration 5 - 4/9/2026
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - added deactivate storefront button handler
 
 Description:
 Fetches the current user's storefront from the API and renders
 the banner, logo, brand name, and listings dynamically.
-Handles Edit Storefront, Create Listing, and View Public Storefront routing.
+Handles Edit Storefront, Create Listing, View Public Storefront, and Deactivate Storefront.
 */
 
 
@@ -25,6 +26,7 @@ const listingGrid = document.getElementById("listingGrid");
 const editStorefrontBtn = document.getElementById("editStorefrontBtn");
 const createListingBtn = document.getElementById("createListingBtn");
 const viewStorefrontBtn = document.getElementById("viewStorefrontBtn");
+const deactivateStorefrontBtn = document.getElementById("deactivateStorefrontBtn");
 
 let storefrontId = null;
 
@@ -123,6 +125,33 @@ async function loadMyStorefront() {
 
         createListingBtn.onclick = () => {
             window.location.href = "/listings/create";
+        };
+
+        deactivateStorefrontBtn.onclick = async () => {
+            const confirmed = confirm(
+                "Are you sure you want to deactivate your storefront?\n\nIt will be hidden from the marketplace. You can reactivate it later by contacting support."
+            );
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`/api/storefronts/${storefrontId}/deactivate`, {
+                    method: "PATCH",
+                    headers: {
+                        "X-User-Id": user.id,
+                        "X-User-Role": user.role
+                    }
+                });
+
+                if (res.ok) {
+                    alert("Your storefront has been deactivated.");
+                    window.location.href = "/storefronts";
+                } else {
+                    const err = await res.json();
+                    alert("Could not deactivate: " + (err.error || "Unknown error"));
+                }
+            } catch (e) {
+                alert("Something went wrong. Please try again.");
+            }
         };
 
         // fetch listings

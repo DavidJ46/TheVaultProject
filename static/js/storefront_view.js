@@ -6,6 +6,7 @@
     Created by Day Ekoi - Iteration 4
     3/22/2026
     Updated by Day Ekoi - Iteration 5 4/9/26
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - fixed wishlistIds undefined crash and isWishlisted undefined in createListingCard
 
 Description:
 This file handles the functionality for the public storefront view page.
@@ -142,6 +143,7 @@ function createListingCard(item, wishlistIds, currentUserId) {
         ? item.price
         : `$${Number(item.price || 0).toFixed(2)}`;
     const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
+    const isWishlisted = wishlistIds.has(String(listingId));
 
     card.innerHTML = `
         ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
@@ -253,20 +255,20 @@ async function loadStorefrontView() {
             document.getElementById("storefrontBanner").style.backgroundPosition = "center";
         }
 
+        // get session user and wishlist (both optional — page works for logged-out users too)
+        const sessionUser = await getCurrentSessionUser();
+        const wishlistIds = await getWishlistIdSet(sessionUser?.id || null);
+
         // show edit button if user owns this storefront
-        const sessionRes = await fetch("/api/auth/me");
-        if (sessionRes.ok) {
-            const sessionUser = await sessionRes.json();
-            if (sessionUser.id && storefront.owner_id && sessionUser.id === storefront.owner_id) {
-                const editBtn = document.createElement("button");
-                editBtn.className = "back-btn";
-                editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
-                editBtn.textContent = "Edit Storefront";
-                editBtn.onclick = () => {
-                    window.location.href = `/storefronts/${storefrontId}/edit`;
-                };
-                document.getElementById("storefrontBanner").appendChild(editBtn);
-            }
+        if (sessionUser?.id && storefront.owner_id && sessionUser.id === storefront.owner_id) {
+            const editBtn = document.createElement("button");
+            editBtn.className = "back-btn";
+            editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; border-radius:999px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
+            editBtn.textContent = "Edit Storefront";
+            editBtn.onclick = () => {
+                window.location.href = `/storefronts/${storefrontId}/edit`;
+            };
+            document.getElementById("storefrontBanner").appendChild(editBtn);
         }
 
         // fetch listings for this storefront
