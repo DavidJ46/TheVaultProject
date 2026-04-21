@@ -1,6 +1,7 @@
 # The Vault Campus Marketplace
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 3
+# Updated by Day Ekoi - Iteration 5 - 4/20/26 - added primary image JOIN to get_listings_by_storefront_id
 
 """
 models/listing_model.py
@@ -136,13 +137,16 @@ def get_listings_by_storefront_id(storefront_id):
     cur = conn.cursor()
 
     query = """
-        SELECT id, storefront_id, title, description, price,
-               fulfillment_type, quantity_on_hand, sizes_available,
-               status, created_at, updated_at
-        FROM listings
-        WHERE storefront_id = %s
-          AND status != 'DELETED'
-        ORDER BY created_at DESC;
+        SELECT l.id, l.storefront_id, l.title, l.description, l.price,
+               l.fulfillment_type, l.quantity_on_hand, l.sizes_available,
+               l.status, l.created_at, l.updated_at,
+               li.image_url
+        FROM listings l
+        LEFT JOIN listing_images li
+            ON li.listing_id = l.id AND li.is_primary = TRUE
+        WHERE l.storefront_id = %s
+          AND l.status != 'DELETED'
+        ORDER BY l.created_at DESC;
     """
 
     cur.execute(query, (storefront_id,))
@@ -165,6 +169,7 @@ def get_listings_by_storefront_id(storefront_id):
             "status": row[8],
             "created_at": row[9],
             "updated_at": row[10],
+            "image_url": row[11],
         })
 
     return listings

@@ -22,6 +22,7 @@ Works with:
 
 // get storefront ID from the URL (e.g. /storefronts/3 → 3)
 const storefrontId = window.location.pathname.split("/").pop();
+const AUTH_ME_ENDPOINT = "/auth/api/auth/me";
 
 // get references to page elements
 const brandName = document.getElementById("brandName");
@@ -32,6 +33,98 @@ const logoFallback = document.getElementById("logoFallback");
 const listingGrid = document.getElementById("listingGrid");
 
 
+function getLocalWishlistItems() {
+    try {
+        const raw = localStorage.getItem("vaultWishlistLocalItems");
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        console.error("Unable to read local wishlist:", error);
+        return [];
+    }
+}
+
+
+function setLocalWishlistItems(items) {
+    const normalized = items.map((item) => ({
+        listing_id: Number(item.listing_id || item.id),
+        title: item.title || item.name || item.listing?.title || "Untitled Listing",
+        price: item.price ?? item.listing?.price ?? 0,
+        image_url: item.image_url || item.listing?.image_url || item.storefront?.logo_url || "/static/images/logo.png",
+        storefront_name: item.storefront_name || item.storefront?.brand_name || brandName.textContent || "Storefront"
+    }));
+
+    localStorage.setItem("vaultWishlistLocalItems", JSON.stringify(normalized));
+    localStorage.setItem("vaultWishlistListingIds", JSON.stringify(normalized.map((item) => String(item.listing_id))));
+}
+
+
+function addLocalWishlistItem(item) {
+    const items = getLocalWishlistItems();
+    const listingId = String(item.listing_id || item.id);
+    const filtered = items.filter((existing) => String(existing.listing_id || existing.id) !== listingId);
+    filtered.unshift({
+        listing_id: Number(listingId),
+        title: item.title || item.name || "Untitled Listing",
+        price: item.price,
+        image_url: item.image_url || "/static/images/logo.png",
+        storefront_name: item.storefront_name || brandName.textContent || "Storefront"
+    });
+    setLocalWishlistItems(filtered);
+}
+
+
+function removeLocalWishlistItem(listingId) {
+    const updated = getLocalWishlistItems().filter((item) => String(item.listing_id || item.id) !== String(listingId));
+    setLocalWishlistItems(updated);
+}
+
+
+async function getCurrentSessionUser() {
+    try {
+        const response = await fetch(AUTH_ME_ENDPOINT);
+        if (!response.ok) return null;
+
+        const user = await response.json();
+        if (user && user.id) {
+            localStorage.setItem("vaultUserId", String(user.id));
+            sessionStorage.setItem("vaultUserId", String(user.id));
+        }
+        return user;
+    } catch (error) {
+        console.error("Unable to determine current user:", error);
+        return null;
+    }
+}
+
+
+async function getWishlistIdSet(userId) {
+    if (!userId) {
+        return new Set();
+    }
+
+    try {
+        const response = await fetch("/api/wishlist", {
+            headers: {
+                "X-User-Id": String(userId)
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load wishlist status");
+        }
+
+        const data = await response.json();
+        const wishlistItems = Array.isArray(data.wishlist) ? data.wishlist : [];
+        setLocalWishlistItems(wishlistItems);
+
+        return new Set(wishlistItems.map((item) => String(item.listing_id || item.id)));
+    } catch (error) {
+        console.error("Unable to load wishlist ids:", error);
+        return new Set(getLocalWishlistItems().map((item) => String(item.listing_id || item.id)));
+    }
+}
+
+
 // renders an empty state message in the listing grid
 function renderEmpty(message) {
     listingGrid.innerHTML = `<p style="color:#c9c9c9; font-style:italic; text-align:center; grid-column: 1/-1;">${message}</p>`;
@@ -39,10 +132,11 @@ function renderEmpty(message) {
 
 
 // builds and returns a single listing card element
-function createListingCard(item) {
+function createListingCard(item, wishlistIds, currentUserId) {
     const card = document.createElement("div");
     card.className = "listing-card";
 
+    const listingId = Number(item.id || item.listing_id);
     const title = item.title || item.name || "Untitled Listing";
     const price = typeof item.price === "string" && item.price.includes("$")
         ? item.price
@@ -50,20 +144,83 @@ function createListingCard(item) {
     const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
 
     card.innerHTML = `
-        <img class="listing-image" src="${imageUrl}" alt="${title}">
+        ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
         <div class="listing-info">
-            <span class="item-name">${title}</span>
-            <span class="item-price">${price}</span>
-            <button class="cart-btn" aria-label="Add to cart">
-                <svg viewBox="0 0 24 24" class="cart-svg">
-                    <path d="M6 8h12l-1 11H7L6 8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="18" y1="5" x2="18" y2="11" stroke="currentColor" stroke-width="2"/>
-                    <line x1="15" y1="8" x2="21" y2="8" stroke="currentColor" stroke-width="2"/>
-                </svg>
-            </button>
+            <div class="listing-copy">
+                <span class="item-name">${title}</span>
+                <span class="item-price">${price}</span>
+            </div>
+            <div class="listing-actions">
+                <button class="wishlist-lock-btn ${isWishlisted ? "active" : ""}" type="button" aria-label="${isWishlisted ? "Remove from wishlist" : "Add to wishlist"}" title="${isWishlisted ? "Remove from wishlist" : "Add to wishlist"}">
+                    <svg viewBox="0 0 24 24" class="wishlist-lock-icon" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                        <rect x="8.5" y="11" width="7" height="5.8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M10 11V9.7a2 2 0 1 1 4 0V11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button class="cart-btn" aria-label="Add to cart">
+                    <svg viewBox="0 0 24 24" class="cart-svg">
+                        <path d="M6 8h12l-1 11H7L6 8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="18" y1="5" x2="18" y2="11" stroke="currentColor" stroke-width="2"/>
+                        <line x1="15" y1="8" x2="21" y2="8" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     `;
+
+    const wishlistBtn = card.querySelector(".wishlist-lock-btn");
+    wishlistBtn.addEventListener("click", async () => {
+        if (!currentUserId) {
+            alert("Please log in to add items to your wishlist.");
+            window.location.href = "/auth/login";
+            return;
+        }
+
+        wishlistBtn.disabled = true;
+        const isActive = wishlistBtn.classList.contains("active");
+
+        try {
+            const response = await fetch(isActive ? `/api/wishlist/${listingId}` : "/api/wishlist", {
+                method: isActive ? "DELETE" : "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-User-Id": String(currentUserId)
+                },
+                body: isActive ? undefined : JSON.stringify({ listing_id: listingId })
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok && !(response.status === 400 && /already in wishlist/i.test(result.error || ""))) {
+                throw new Error(result.error || "Unable to update wishlist.");
+            }
+
+            const nextState = !isActive;
+            wishlistBtn.classList.toggle("active", nextState);
+            wishlistBtn.setAttribute("aria-label", nextState ? "Remove from wishlist" : "Add to wishlist");
+            wishlistBtn.setAttribute("title", nextState ? "Remove from wishlist" : "Add to wishlist");
+
+            if (nextState) {
+                wishlistIds.add(String(listingId));
+                addLocalWishlistItem({
+                    listing_id: listingId,
+                    title,
+                    price,
+                    image_url: imageUrl,
+                    storefront_name: brandName.textContent || "Storefront"
+                });
+            } else {
+                wishlistIds.delete(String(listingId));
+                removeLocalWishlistItem(listingId);
+            }
+        } catch (error) {
+            console.error("Wishlist update failed:", error);
+            alert(error.message || "Unable to update wishlist right now.");
+        } finally {
+            wishlistBtn.disabled = false;
+        }
+    });
 
     return card;
 }
@@ -129,7 +286,7 @@ async function loadStorefrontView() {
         }
 
         activeListings.forEach(item => {
-            listingGrid.appendChild(createListingCard(item));
+            listingGrid.appendChild(createListingCard(item, wishlistIds, sessionUser?.id || null));
         });
 
     } catch (error) {

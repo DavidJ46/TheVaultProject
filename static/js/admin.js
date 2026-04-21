@@ -1,4 +1,5 @@
 // File Created By David Jackson
+// Updated by Day Ekoi - Iteration 5 - 4/20/26 - fixed storefront table to use brand_name field
 
 // USERS SECTION
 
@@ -102,7 +103,7 @@ async function loadStorefronts() {
         const row = `
             <tr>
                 <td>${store.id}</td>
-                <td>${store.name}</td>
+                <td>${store.brand_name}</td>
             </tr>
         `;
         table.innerHTML += row;

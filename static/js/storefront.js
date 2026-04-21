@@ -5,6 +5,7 @@ storefront.js
   CSC 405 Sp 26
   Created by Day Ekoi - Iteration 4
   Date: 3/18/2026 - 3/22/2026
+  Updated by Day Ekoi - Iteration 5 - 4/20/26 - fetchStorefronts now maps preview_image_1-4 to card carousel; falls back to banner_url if no previews set
 
 Description: This file is responsible for the behavior of the storefront homepage. As of now, it stores sample storefront data, creates storefront cards using that data, 
 inserts the cards into the storefront grid in storefront.html, and handles the image carousel functionality for each storefront cards. 
@@ -38,62 +39,7 @@ What needs to be replaced later:
 */
 
 
-// Storefront data structure:
-// storefront 1 placeholder
-let storefronts = [
-  {
-    id: 1,
-    name: "Nike",
-    categories: ["Athleisure", "Casual"],
-    items: 24,
-    logo: "/static/images/nikelogo.png",
-    images: [
-      "/static/images/nikehoodie1.png",
-      "/static/images/nikehoodie2.png",
-      "/static/images/nikejacket.png",
-      "/static/images/nikepants1.png"
-    ]
-  },
-  // storefront 2 placeholder
-  {
-    id: 2,
-    name: "Onyx",
-    categories: ["Casual", "Retro"],
-    items: 26,
-    logo: "/static/images/onyxlogo.jpeg",
-    images: [
-      "/static/images/onyxhoodie.png",
-    ]
-  },
-  // storefront 3 placeholder
-  {
-    id: 3,
-    name: "Essentials Fear of God",
-    categories: ["Casual", "Streetwear"],
-    items: 18,
-    logo: "/static/images/essentialslogo.png",
-    images: [
-      "/static/images/essentials1.png",
-      "/static/images/essentials2.png",
-      "/static/images/essentials3.png",
-      "/static/images/essentials4.png"
-    ]
-  },
-  // storefront 4 placeholder
-  {
-    id: 4,
-    name: "Von Dutch",
-    categories: ["Streetwear", "Accessories"],
-    items: 10,
-    logo: "/static/images/vondutchlogo.png",
-    images: [
-      "/static/images/vondutch1.png",
-      "/static/images/vondutch2.png",
-      "/static/images/vondutch3.png",
-      "/static/images/vondutch4.png"
-    ]
-  }
-];
+let storefronts = [];
 
 
 
@@ -124,20 +70,17 @@ function createCard(store) {
   card.className = "storefront-card"; // assigns the storefront-card class to the new element for styling purposes
 
   const categories = Array.isArray(store.categories) ? store.categories : [];
-  const images = Array.isArray(store.images) && store.images.length > 0
-    ? store.images
-    : ["/static/images/placeholder-storefront.png"];
-
-  const logo = store.logo || "/static/images/placeholder-storefront.png";
+  const images = Array.isArray(store.images) ? store.images.filter(Boolean) : [];
+  const logo = store.logo || null;
   const items = store.items ?? 0;
-
-
-// this function inserts the HTML strucutre for the storefront card
 
   card.innerHTML = `
     <div>
       <div class="storefront-header">
-        <img class="storefront-logo" src="${logo}">
+        ${logo
+          ? `<img class="storefront-logo" src="${logo}">`
+          : `<div class="storefront-logo"></div>`
+        }
         <div>
           <h2 class="storefront-name">${store.name}</h2>
           <p class="storefront-meta">
@@ -148,7 +91,7 @@ function createCard(store) {
 
       <div class="carousel-shell">
         <button class="carousel-btn left">&#10094;</button>
-        <img class="carousel-image" src="${images[0]}">
+        ${images.length > 0 ? `<img class="carousel-image" src="${images[0]}">` : `<div class="carousel-image"></div>`}
         <button class="carousel-btn right">&#10095;</button>
       </div>
 
@@ -201,8 +144,29 @@ function createCard(store) {
     window.location.href = `/storefronts/${store.id}`;
   };
 
+  // Lightbox: click carousel image to see full preview - Added by Day Ekoi 4/20/26
+  if (img && img.tagName === "IMG") {
+    img.addEventListener("click", () => {
+      const overlay = document.getElementById("lightboxOverlay");
+      const lightboxImg = document.getElementById("lightboxImg");
+      lightboxImg.src = img.src;
+      overlay.classList.add("active");
+    });
+  }
+
   return card; // returns the fully built card
 }
+
+
+// Close lightbox when clicking the overlay - Added by Day Ekoi 4/20/26
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("lightboxOverlay");
+  if (overlay) {
+    overlay.addEventListener("click", () => {
+      overlay.classList.remove("active");
+    });
+  }
+});
 
 
 /*  function to render all stores
@@ -237,21 +201,28 @@ async function fetchStorefronts() {
 
     const storefrontArray = Array.isArray(data) ? data : [data]; // Updated by Day E 3/22/26
 
-    storefronts = storefrontArray.map(store => ({
-      id: store.id,
-      name: store.brand_name || "Unnamed Storefront",
-      categories: ["Vault Brand"], // Updated by Day E 3/22/26
-      items: 0, // Updated by Day E 3/22/26
-      logo: store.logo_url || "/static/images/placeholder-storefront.png",
-      images: [
-        store.banner_url || "/static/images/placeholder-storefront.png"
-      ]
-    }));
+    storefronts = storefrontArray.map(store => { //updated 4/20/2026
+      const previewImages = [
+        store.preview_image_1,
+        store.preview_image_2,
+        store.preview_image_3,
+        store.preview_image_4,
+      ].filter(Boolean);
+
+      return {
+        id: store.id,
+        name: store.brand_name || "Unnamed Storefront",
+        categories: store.categories || [],
+        items: store.item_count || 0,
+        logo: store.logo_url || null,
+        images: previewImages.length > 0 ? previewImages : (store.banner_url ? [store.banner_url] : [])
+      };
+    });
 
     renderStorefronts();
   } catch (error) {
     console.error("Error fetching storefronts from Flask API:", error);
-    renderStorefronts(); // fallback to placeholder storefronts
+    if (grid) grid.innerHTML = `<p style="color:#888; font-style:italic; text-align:center; grid-column:1/-1; padding:2rem;">Could not load storefronts. Please try again.</p>`;
   }
 }
 

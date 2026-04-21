@@ -3,8 +3,8 @@
 
     The Vault Campus Marketplace
     CSC 405 Sp 26'
-    Created by Day Ekoi - Iteration 4
-    3/18/2026-3/22/2026
+    Created by Day Ekoi - Iteration 4 - 3/18/2026-3/22/2026
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - added lightbox overlay styles for storefront card image previews
 
 Description: 
 The purpose of this file is to control the style and layout of the storefront homepage.
@@ -473,6 +473,41 @@ nav-divider { /* updated by Day E 4/9/2026 */
 
 .page-indicator {
     font-size: 1.2rem;
+}
+
+
+/* Lightbox overlay - Added by Day Ekoi 4/20/26 */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    cursor: zoom-out;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.lightbox-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-img {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.carousel-image {
+    cursor: zoom-in;
 }
 
 
