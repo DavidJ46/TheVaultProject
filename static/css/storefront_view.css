@@ -219,6 +219,111 @@ body {
     gap: 0.7rem;
 }
 
+.purchase-panel {
+    width: 100%;
+    margin-top: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.purchase-fields {
+    display: grid;
+    grid-template-columns: auto 1fr auto 88px;
+    align-items: center;
+    gap: 0.45rem 0.6rem;
+}
+
+.field-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #d9d9d9;
+}
+
+.size-select,
+.count-input {
+    width: 100%;
+    min-height: 36px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    background: rgba(18, 18, 18, 0.95);
+    color: #f5f5f5;
+    font-size: 0.92rem;
+    padding: 0.45rem 0.6rem;
+}
+
+.size-select:disabled,
+.count-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    min-height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #e1b64f 0%, #b8860b 100%);
+    color: #161616;
+    font-size: 0.92rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease, opacity 0.16s ease;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+}
+
+.add-to-cart-btn:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+.cart-toast-root {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1400;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: min(92vw, 360px);
+}
+
+.cart-toast {
+    border-radius: 12px;
+    padding: 0.72rem 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.25;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.cart-toast.success {
+    background: #111111;
+    color: #f3ce73;
+    border: 1px solid #b8860b;
+}
+
+.cart-toast.error {
+    background: #2c1212;
+    color: #ffd4d4;
+    border: 1px solid #b73f3f;
+}
+
+.cart-toast.fade-out {
+    opacity: 0;
+    transform: translateY(7px);
+}
+
 .wishlist-lock-btn {
     width: 40px;
     height: 40px;
@@ -271,6 +376,10 @@ body {
 @media (max-width: 900px) {
     .listing-grid {
         grid-template-columns: 1fr;
+    }
+
+    .purchase-fields {
+        grid-template-columns: auto 1fr;
     }
 
     .brand-name {

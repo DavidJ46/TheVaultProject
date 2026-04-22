@@ -22,10 +22,127 @@ This data is sent to the backend via the listing creation API endpoint.
 
 // Wait for DOM content to be fully loaded before accessing elements
 document.addEventListener('DOMContentLoaded', function() {
+
+  function ensureToastRoot() {
+    let root = document.getElementById("toastRoot");
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "toastRoot";
+      root.className = "toast-root";
+      document.body.appendChild(root);
+    }
+    return root;
+  }
+
+  function showListingToast(message, tone = "success") {
+    const root = ensureToastRoot();
+    const toast = document.createElement("div");
+    toast.className = `toast ${tone === "success" ? "success" : "error"}`;
+    toast.textContent = message;
+    root.appendChild(toast);
+
+    window.setTimeout(() => {
+      toast.classList.add("fade-out");
+      window.setTimeout(() => toast.remove(), 220);
+    }, 2200);
+  }
+
   // Get form elements
   const listingForm = document.getElementById("listingForm");
   const cancelBtn = document.getElementById("cancelBtn");
   const storefrontSelect = document.getElementById("storefrontSelect");
+  const previewInputs = [1, 2, 3, 4].map((index) => document.getElementById(`previewImage${index}`));
+  const selectedListingImages = [null, null, null, null];
+
+  function renderSinglePreview(previewContainer, file, zone, slotIndex) {
+    if (!previewContainer) return;
+
+    previewContainer.innerHTML = "";
+    if (!file) {
+      if (zone) {
+        zone.classList.remove("has-image");
+        zone.style.backgroundImage = "";
+        const existingBadge = zone.querySelector(".image-selected-badge");
+        if (existingBadge) {
+          existingBadge.remove();
+        }
+      }
+      return;
+    }
+
+    const thumbWrap = document.createElement("div");
+    thumbWrap.className = "thumb-wrap";
+
+    const image = document.createElement("img");
+    image.src = URL.createObjectURL(file);
+    image.alt = file.name;
+    image.onload = () => URL.revokeObjectURL(image.src);
+
+    const fileName = document.createElement("p");
+    fileName.className = "thumb-name";
+    fileName.textContent = file.name;
+
+    thumbWrap.appendChild(image);
+    thumbWrap.appendChild(fileName);
+    previewContainer.appendChild(thumbWrap);
+
+    if (zone) {
+      const zoneImageUrl = URL.createObjectURL(file);
+      zone.style.backgroundImage = `url('${zoneImageUrl}')`;
+      zone.classList.add("has-image");
+
+      const existingBadge = zone.querySelector(".image-selected-badge");
+      if (existingBadge) {
+        existingBadge.remove();
+      }
+
+      const badge = document.createElement("span");
+      badge.className = "image-selected-badge";
+      badge.textContent = `Image ${slotIndex + 1} selected`;
+      zone.appendChild(badge);
+    }
+  }
+
+  function wireDropZone(zone, input, previewContainer, slotIndex) {
+    if (!zone || !input) return;
+
+    zone.addEventListener("click", () => input.click());
+
+    zone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      zone.classList.add("dragover");
+    });
+
+    zone.addEventListener("dragleave", () => {
+      zone.classList.remove("dragover");
+    });
+
+    zone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      zone.classList.remove("dragover");
+
+      const droppedFile = event.dataTransfer?.files?.[0];
+      if (droppedFile && droppedFile.type.startsWith("image/")) {
+        selectedListingImages[slotIndex] = droppedFile;
+        renderSinglePreview(previewContainer, droppedFile, zone, slotIndex);
+      }
+    });
+
+    input.addEventListener("change", () => {
+      const chosenFile = input.files?.[0];
+      selectedListingImages[slotIndex] = chosenFile && chosenFile.type.startsWith("image/")
+        ? chosenFile
+        : null;
+      renderSinglePreview(previewContainer, selectedListingImages[slotIndex], zone, slotIndex);
+    });
+  }
+
+  [1, 2, 3, 4].forEach((index, arrayIndex) => {
+    const zone = document.getElementById(`previewZone${index}`);
+    const input = previewInputs[arrayIndex];
+    const preview = document.getElementById(`previewPreview${index}`);
+    wireDropZone(zone, input, preview, arrayIndex);
+  });
 
   // Load user's storefronts for the dropdown
   if (storefrontSelect) {
@@ -49,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Collect form data including file
       const storefrontId = document.getElementById("storefrontSelect").value;
       const listingName = document.getElementById("listingName").value.trim();
-      const listingImageInput = document.getElementById("listingImage");
       const count = parseInt(document.getElementById("count").value);
       const price = parseFloat(document.getElementById("price").value);
 
@@ -69,6 +185,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      const listingImages = selectedListingImages.filter(Boolean);
+
+      if (listingImages.length === 0) {
+        alert("Please upload at least one listing image.");
+        return;
+      }
+
       // Validate form data
       if (!listingName || count < 1 || price < 0) {
         alert("Please fill in all required fields with valid values.");
@@ -84,7 +207,11 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append("price", price);
         formData.append("fulfillment_type", "IN_STOCK");
         formData.append("status", "ACTIVE");
-        formData.append("listing_image", listingImageInput.files[0]);
+        listingImages.forEach((file) => {
+          formData.append("listing_images", file);
+        });
+        // Backward compatibility in case older backend code expects listing_image.
+        formData.append("listing_image", listingImages[0]);
         formData.append("sizes_available", JSON.stringify(sizes));
 
         const response = await fetch("/api/listings/create", {
@@ -99,8 +226,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
 
         if (response.ok) {
-          alert("Listing created successfully!");
-          window.location.href = "/my-storefront";
+          showListingToast(`Listing "${listingName}" created successfully!`);
+          window.setTimeout(() => {
+            window.location.href = "/my-storefront";
+          }, 2500);
         } else {
           alert("Error creating listing: " + (result.error || "Unknown error"));
         }

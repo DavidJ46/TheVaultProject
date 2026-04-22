@@ -36,6 +36,164 @@ This file acts as the UI structure (skeleton) of the Create Listing feature.
 
     <!-- Flask version - uses create_storefront.css for styling consistency -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/create_storefront.css') }}">
+    <style>
+        .drop-zone {
+            border: 2px dashed #d4af37;
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+            cursor: pointer;
+            color: #888;
+            transition: background 0.2s, border-color 0.2s;
+            width: 90%;
+            margin: 0 auto;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .drop-zone.dragover {
+            background: rgba(212, 175, 55, 0.08);
+            border-color: #f0cc55;
+        }
+        .drop-zone.has-image {
+            background-size: cover;
+            background-position: center;
+            border-style: solid;
+        }
+        .drop-zone.has-image p {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .drop-zone .image-selected-badge {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid rgba(212, 175, 55, 0.75);
+            color: #f2d06c;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            padding: 0.22rem 0.45rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+        .drop-link { color: #d4af37; text-decoration: underline; cursor: pointer; }
+        .image-preview-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .image-preview-row .thumb-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .image-preview-row img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        .image-preview-row .thumb-name {
+            font-size: 0.7rem;
+            color: #aaa;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .preview-grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+        .preview-slot {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .slot-label {
+            font-size: 0.8rem;
+            color: #d4af37;
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+        }
+        .two-col-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .price-wrap {
+            width: 90%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+        .price-wrap span {
+            font-weight: 700;
+            color: #d4af37;
+            min-width: 14px;
+            text-align: center;
+        }
+        .metric-field {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .metric-field input[type="number"] {
+            width: 90%;
+        }
+        @media (max-width: 900px) {
+            .two-col-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .toast-root {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 1400;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            width: min(92vw, 360px);
+        }
+        .toast {
+            border-radius: 12px;
+            padding: 0.72rem 0.9rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1.25;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.38);
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .toast.success {
+            background: #111111;
+            color: #f3ce73;
+            border: 1px solid #b8860b;
+        }
+        .toast.fade-out {
+            opacity: 0;
+            transform: translateY(7px);
+        }
+    </style>
 
 </head>
 
@@ -61,90 +219,102 @@ This file acts as the UI structure (skeleton) of the Create Listing feature.
 
         <form class="storefront-form" id="listingForm" enctype="multipart/form-data">
 
-            <!-- Storefront Name -->
-            <section class="form-card input-card">
-                <label for="storefrontSelect" class="section-label">
-                    Storefront Name <span class="required">*</span>
-                </label>
-                <select id="storefrontSelect" name="storefront_id" required>
-                    <option value="">Loading your storefronts...</option>
-                </select>
+            <section class="form-card banner-card">
+                <label class="section-label">Listing Preview Images (up to 4) <span class="required">*</span></label>
+
+                <div class="preview-grid-4">
+                    <div class="preview-slot">
+                        <p class="slot-label">Image 1</p>
+                        <div class="drop-zone" id="previewZone1"><p>Drag & drop or <span class="drop-link">browse</span></p><input type="file" id="previewImage1" accept="image/*" hidden></div>
+                        <div class="image-preview-row" id="previewPreview1"></div>
+                    </div>
+                    <div class="preview-slot">
+                        <p class="slot-label">Image 2</p>
+                        <div class="drop-zone" id="previewZone2"><p>Drag & drop or <span class="drop-link">browse</span></p><input type="file" id="previewImage2" accept="image/*" hidden></div>
+                        <div class="image-preview-row" id="previewPreview2"></div>
+                    </div>
+                    <div class="preview-slot">
+                        <p class="slot-label">Image 3</p>
+                        <div class="drop-zone" id="previewZone3"><p>Drag & drop or <span class="drop-link">browse</span></p><input type="file" id="previewImage3" accept="image/*" hidden></div>
+                        <div class="image-preview-row" id="previewPreview3"></div>
+                    </div>
+                    <div class="preview-slot">
+                        <p class="slot-label">Image 4</p>
+                        <div class="drop-zone" id="previewZone4"><p>Drag & drop or <span class="drop-link">browse</span></p><input type="file" id="previewImage4" accept="image/*" hidden></div>
+                        <div class="image-preview-row" id="previewPreview4"></div>
+                    </div>
+                </div>
+
+                <p class="helper-text">The first selected image will be used as the primary listing image.</p>
             </section>
 
+            <section class="middle-row">
+                <div class="form-card input-card">
+                    <label for="storefrontSelect" class="section-label">
+                        Storefront Name <span class="required">*</span>
+                    </label>
+                    <select id="storefrontSelect" name="storefront_id" required>
+                        <option value="">Loading your storefronts...</option>
+                    </select>
+                </div>
 
-            <!-- Listing Name -->
-            <section class="form-card input-card">
-                <label for="listingName" class="section-label">
-                    Listing Name <span class="required">*</span>
-                </label>
-                <input 
-                    type="text" 
-                    id="listingName" 
-                    name="listing_name" 
-                    placeholder="Enter listing name (e.g., Vintage Hoodie)"
-                    required
-                >
-            </section>
-
-
-            <!-- Listing Image -->
-            <section class="form-card logo-card">
-                <label for="listingImage" class="section-label">
-                    Listing Image <span class="required">*</span>
-                </label>
-                <input 
-                    type="file" 
-                    id="listingImage" 
-                    name="listing_image" 
-                    accept="image/*" 
-                    required
-                >
-            </section>
-
-
-            <!-- Sizes Available -->
-            <section class="form-card category-card">
-                <p class="section-label">Available Sizes <span class="required">*</span></p>
-                <div class="category-grid">
-                    <label><input type="checkbox" name="sizes" value="S" required> Small (S)</label>
-                    <label><input type="checkbox" name="sizes" value="M"> Medium (M)</label>
-                    <label><input type="checkbox" name="sizes" value="L"> Large (L)</label>
+                <div class="form-card input-card">
+                    <label for="listingName" class="section-label">
+                        Listing Name <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="listingName"
+                        name="listing_name"
+                        placeholder="Enter listing name (e.g., Vintage Hoodie)"
+                        required
+                    >
                 </div>
             </section>
 
+            <section class="bottom-row">
+                <div class="form-card category-card">
+                    <p class="section-label">Available Sizes <span class="required">*</span></p>
+                    <div class="category-grid">
+                        <label><input type="checkbox" name="sizes" value="S" required> Small (S)</label>
+                        <label><input type="checkbox" name="sizes" value="M"> Medium (M)</label>
+                        <label><input type="checkbox" name="sizes" value="L"> Large (L)</label>
+                    </div>
+                </div>
 
-            <!-- Count / Quantity -->
-            <section class="form-card input-card">
-                <label for="count" class="section-label">
-                    Count (Quantity Available) <span class="required">*</span>
-                </label>
-                <input 
-                    type="number" 
-                    id="count" 
-                    name="count" 
-                    placeholder="Enter quantity available"
-                    min="1"
-                    required
-                >
-            </section>
-
-
-            <!-- Price -->
-            <section class="form-card input-card">
-                <label for="price" class="section-label">
-                    Price <span class="required">*</span>
-                </label>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-weight: 600;">$</span>
-                    <input 
-                        type="number" 
-                        id="price" 
-                        name="price" 
-                        placeholder="0.00"
-                        min="0"
-                        step="0.01"
-                        required
-                    >
+                <div class="form-card description-card">
+                    <div class="two-col-row" style="width: 100%;">
+                        <div class="metric-field">
+                            <label for="count" class="section-label">
+                                Count (Quantity Available) <span class="required">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                id="count"
+                                name="count"
+                                placeholder="Enter quantity available"
+                                min="1"
+                                required
+                            >
+                        </div>
+                        <div class="metric-field">
+                            <label for="price" class="section-label">
+                                Price <span class="required">*</span>
+                            </label>
+                            <div class="price-wrap">
+                                <span>$</span>
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 

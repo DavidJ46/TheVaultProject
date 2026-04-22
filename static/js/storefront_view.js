@@ -34,6 +34,95 @@ const logoFallback = document.getElementById("logoFallback");
 const listingGrid = document.getElementById("listingGrid");
 
 
+function ensureToastRoot() {
+    let root = document.getElementById("cartToastRoot");
+    if (!root) {
+        root = document.createElement("div");
+        root.id = "cartToastRoot";
+        root.className = "cart-toast-root";
+        document.body.appendChild(root);
+    }
+    return root;
+}
+
+
+function showCartToast(message, tone = "success") {
+    const root = ensureToastRoot();
+    const toast = document.createElement("div");
+    toast.className = `cart-toast ${tone === "error" ? "error" : "success"}`;
+    toast.textContent = message;
+    root.appendChild(toast);
+
+    window.setTimeout(() => {
+        toast.classList.add("fade-out");
+        window.setTimeout(() => toast.remove(), 220);
+    }, 2200);
+}
+
+
+function toNumericPrice(priceValue) {
+    if (typeof priceValue === "number") return priceValue;
+    if (typeof priceValue === "string") {
+        const cleaned = priceValue.replace(/\$/g, "").trim();
+        const parsed = Number(cleaned);
+        if (!Number.isNaN(parsed)) return parsed;
+    }
+    return 0;
+}
+
+
+function parseSizesFromListing(item) {
+    const source = item.sizes_available;
+
+    if (Array.isArray(source)) {
+        return source.map((size) => String(size).trim()).filter(Boolean);
+    }
+
+    if (typeof source === "string" && source.trim()) {
+        try {
+            const parsed = JSON.parse(source);
+            if (Array.isArray(parsed)) {
+                return parsed.map((size) => String(size).trim()).filter(Boolean);
+            }
+        } catch (_error) {
+            return source
+                .split(",")
+                .map((size) => size.trim())
+                .filter(Boolean);
+        }
+    }
+
+    return [];
+}
+
+
+async function getListingSizeOptions(listingId, item) {
+    const inlineSizes = parseSizesFromListing(item);
+    if (inlineSizes.length > 0) {
+        return inlineSizes;
+    }
+
+    try {
+        const response = await fetch(`/api/listings/${listingId}/sizes`);
+        if (!response.ok) {
+            return [];
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            return [];
+        }
+
+        return data
+            .map((entry) => String(entry.size || "").trim())
+            .filter(Boolean);
+    } catch (error) {
+        console.error("Unable to load listing sizes:", error);
+        return [];
+    }
+}
+
+
 function getLocalWishlistItems() {
     try {
         const raw = localStorage.getItem("vaultWishlistLocalItems");
@@ -133,17 +222,28 @@ function renderEmpty(message) {
 
 
 // builds and returns a single listing card element
-function createListingCard(item, wishlistIds, currentUserId) {
+async function createListingCard(item, wishlistIds, currentUserId) {
     const card = document.createElement("div");
     card.className = "listing-card";
 
     const listingId = Number(item.id || item.listing_id);
     const title = item.title || item.name || "Untitled Listing";
+    const numericPrice = toNumericPrice(item.price);
     const price = typeof item.price === "string" && item.price.includes("$")
         ? item.price
-        : `$${Number(item.price || 0).toFixed(2)}`;
+        : `$${numericPrice.toFixed(2)}`;
     const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
     const isWishlisted = wishlistIds.has(String(listingId));
+    const sizeOptions = await getListingSizeOptions(listingId, item);
+    const hasSizes = sizeOptions.length > 0;
+
+    const sizeOptionsMarkup = hasSizes
+        ? sizeOptions
+            .map((size, index) => `<option value="${size}" ${index === 0 ? "selected" : ""}>${size}</option>`)
+            .join("")
+        : `<option value="" selected disabled>No sizes available</option>`;
+
+    const maxQuantity = item.quantity_on_hand || 1;
 
     card.innerHTML = `
         ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
@@ -160,15 +260,18 @@ function createListingCard(item, wishlistIds, currentUserId) {
                         <path d="M10 11V9.7a2 2 0 1 1 4 0V11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                 </button>
-                <button class="cart-btn" aria-label="Add to cart">
-                    <svg viewBox="0 0 24 24" class="cart-svg">
-                        <path d="M6 8h12l-1 11H7L6 8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="18" y1="5" x2="18" y2="11" stroke="currentColor" stroke-width="2"/>
-                        <line x1="15" y1="8" x2="21" y2="8" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </button>
             </div>
+        </div>
+        <div class="purchase-panel">
+            <div class="purchase-fields">
+                <label class="field-label" for="sizeSelect-${listingId}">Size</label>
+                <select id="sizeSelect-${listingId}" class="size-select" ${hasSizes ? "" : "disabled"}>
+                    ${sizeOptionsMarkup}
+                </select>
+                <label class="field-label" for="countInput-${listingId}">Count</label>
+                <input id="countInput-${listingId}" class="count-input" type="number" min="1" max="${maxQuantity}" step="1" value="1" inputmode="numeric">
+            </div>
+            <button type="button" class="add-to-cart-btn" ${hasSizes ? "" : "disabled"}>Add to Cart</button>
         </div>
     `;
 
@@ -221,6 +324,67 @@ function createListingCard(item, wishlistIds, currentUserId) {
             alert(error.message || "Unable to update wishlist right now.");
         } finally {
             wishlistBtn.disabled = false;
+        }
+    });
+
+    const sizeSelect = card.querySelector(".size-select");
+    const countInput = card.querySelector(".count-input");
+    const addToCartBtn = card.querySelector(".add-to-cart-btn");
+
+    addToCartBtn.addEventListener("click", async () => {
+        if (!currentUserId) {
+            alert("Please log in to add items to your cart.");
+            window.location.href = "/auth/login";
+            return;
+        }
+
+        const selectedSize = sizeSelect.value;
+        const selectedCount = Number.parseInt(countInput.value, 10);
+        const maxQuantity = item.quantity_on_hand || 1;
+
+        if (!selectedSize) {
+            showCartToast("Please select a size.", "error");
+            return;
+        }
+
+        if (!Number.isInteger(selectedCount) || selectedCount < 1) {
+            showCartToast("Count must be at least 1.", "error");
+            countInput.value = "1";
+            return;
+        }
+
+        if (selectedCount > maxQuantity) {
+            showCartToast(`Maximum available quantity is ${maxQuantity}.`, "error");
+            countInput.value = String(maxQuantity);
+            return;
+        }
+
+        addToCartBtn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append("item_id", String(listingId));
+            formData.append("item_name", title);
+            formData.append("price", String(numericPrice));
+            formData.append("quantity", String(selectedCount));
+            formData.append("size", selectedSize);
+
+            const response = await fetch("/auth/add_to_cart", {
+                method: "POST",
+                body: formData,
+                redirect: "follow"
+            });
+
+            if (!response.ok) {
+                throw new Error("Unable to add item to cart right now.");
+            }
+
+            showCartToast(`${title} (${selectedSize}) x${selectedCount} added to cart.`);
+        } catch (error) {
+            console.error("Add to cart failed:", error);
+            showCartToast(error.message || "Unable to add to cart.", "error");
+        } finally {
+            addToCartBtn.disabled = false;
         }
     });
 
@@ -277,8 +441,12 @@ async function loadStorefrontView() {
             return;
         }
 
-        activeListings.forEach(item => {
-            listingGrid.appendChild(createListingCard(item, wishlistIds, sessionUser?.id || null));
+        const cards = await Promise.all(
+            activeListings.map((item) => createListingCard(item, wishlistIds, sessionUser?.id || null))
+        );
+
+        cards.forEach((card) => {
+            listingGrid.appendChild(card);
         });
 
     } catch (error) {

@@ -116,25 +116,31 @@ def create_listing_from_form():
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid sizes_available format."}), 400
 
-        # Handle file upload - Updated by Day E 4/10/26 - S3 upload
-        image_url = None
-        if "listing_image" in request.files and request.files["listing_image"].filename:
-            file = request.files["listing_image"]
+        # Handle file upload(s) - supports multiple images, first one is primary.
+        upload_files = request.files.getlist("listing_images")
+        upload_files = [f for f in upload_files if f and f.filename]
 
-            # Validate file type
-            if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                return jsonify({"error": "Image must be PNG, JPG, JPEG, GIF, or WebP."}), 400
+        # Backward compatibility for existing clients sending one file as listing_image.
+        if not upload_files and "listing_image" in request.files and request.files["listing_image"].filename:
+            upload_files = [request.files["listing_image"]]
 
-            # Upload to S3 - Updated by Day E 4/10/26
-            try:
-                from utils.s3 import upload_image_to_s3
+        if not upload_files:
+            return jsonify({"error": "At least one listing image is required."}), 400
+
+        image_urls = []
+        try:
+            from utils.s3 import upload_image_to_s3
+
+            for file in upload_files:
+                if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+                    return jsonify({"error": "Image must be PNG, JPG, JPEG, GIF, or WebP."}), 400
+
                 image_url = upload_image_to_s3(file, folder="listings")
                 if not image_url:
                     return jsonify({"error": "Failed to upload image to S3."}), 500
-            except Exception as e:
-                return jsonify({"error": f"Error uploading image to S3: {str(e)}"}), 500
-        else:
-            return jsonify({"error": "listing_image is required."}), 400
+                image_urls.append(image_url)
+        except Exception as e:
+            return jsonify({"error": f"Error uploading image(s) to S3: {str(e)}"}), 500
 
         # Prepare data for service
         data = {
@@ -149,10 +155,10 @@ def create_listing_from_form():
         # Create listing
         listing = create_listing_service(current_user, storefront_id, data)
 
-        # Add image to listing
-        if image_url:
+        # Add uploaded images to listing
+        for index, image_url in enumerate(image_urls):
             try:
-                add_listing_image_service(current_user, listing["id"], image_url, is_primary=True)
+                add_listing_image_service(current_user, listing["id"], image_url, is_primary=(index == 0))
             except Exception as e:
                 # Log but don't fail - listing was created
                 print(f"Warning: Failed to add image to listing: {str(e)}")
