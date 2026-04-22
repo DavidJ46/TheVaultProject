@@ -6,6 +6,7 @@ storefront.js
   Created by Day Ekoi - Iteration 4
   Date: 3/18/2026 - 3/22/2026
   Updated by Day Ekoi - Iteration 5 - 4/20/26 - fetchStorefronts now maps preview_image_1-4 to card carousel; falls back to banner_url if no previews set
+  Updated by Day Ekoi - Iteration 5 - 4/20/26 - removed add-to-cart form from storefront cards (size, qty, add to bag); kept version history via comments
 
 Description: This file is responsible for the behavior of the storefront homepage. As of now, it stores sample storefront data, creates storefront cards using that data, 
 inserts the cards into the storefront grid in storefront.html, and handles the image carousel functionality for each storefront cards. 
@@ -75,7 +76,7 @@ function createCard(store) {
   const items = store.items ?? 0;
 
   card.innerHTML = `
-    <div>
+    <div class="storefront-card-body">
       <div class="storefront-header">
         ${logo
           ? `<img class="storefront-logo" src="${logo}">`
@@ -95,10 +96,13 @@ function createCard(store) {
         <button class="carousel-btn right">&#10095;</button>
       </div>
 
+      <!-- Removed by Day Ekoi - Iteration 5 - 4/20/26: add-to-cart form removed from storefront cards.
+           Cart/size/qty actions belong on the individual listing page, not the storefront browse view.
       <form action="/auth/add_to_cart" method="POST" class="bag-form">
         <input type="hidden" name="item_id" value="${store.id}">
         <input type="hidden" name="item_name" value="${store.name} Official Item">
-        <input type="hidden" name="price" value="45.00"> <div class="selection-row">
+        <input type="hidden" name="price" value="45.00">
+        <div class="selection-row">
           <select name="size" class="vault-select">
             <option value="S">S</option>
             <option value="M">M</option>
@@ -109,10 +113,11 @@ function createCard(store) {
         </div>
         <button type="submit" class="add-bag-btn">Add to Bag</button>
       </form>
+      -->
     </div>
 
-    <div class="storefront-footer" style="margin-top: 15px;">
-      <button class="enter-btn" style="width: 100%;">Enter Storefront</button>
+    <div class="storefront-footer">
+      <button class="enter-btn">Enter Storefront</button>
     </div>
   `;
 
@@ -293,5 +298,4 @@ if (searchInput) {
 fetchStorefronts(); // Updated by Day E 4/9/26 - this will now fetch real storefront data from the Flask API and then render the storefronts. If the API route is not ready or fails, it will fallback to rendering the placeholder storefronts. */
 
 /* renderStorefronts(); // Updated by Day E 3/22/26 */
-
 

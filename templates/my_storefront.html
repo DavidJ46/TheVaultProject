@@ -25,7 +25,7 @@ It is different from the public storefront page because this version is meant fo
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Storefront</title>
+    <title>Storefront Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/my_storefront.css') }}">
 </head>
 
@@ -44,7 +44,7 @@ It is different from the public storefront page because this version is meant fo
 
         <!-- Banner section -->
         <section class="banner-section">
-            <h1 class="dashboard-title">My Storefront</h1>
+            <h1 class="dashboard-title" id="pageTitle">Loading...</h1>
 
             <!-- banner — background image set by JS if available -->
             <div class="banner-box" id="bannerBox">
@@ -61,20 +61,26 @@ It is different from the public storefront page because this version is meant fo
         <!-- Profile info row - Updated by Day Ekoi 4/20/26 -->
         <section class="store-info-row">
 
-            <!-- name left, buttons right — same row -->
-            <div class="name-btn-row">
-                <h2 class="brand-name" id="brandName">Loading...</h2>
-                <div class="dashboard-actions">
-                    <button class="action-btn" id="editStorefrontBtn">Edit Storefront</button>
-                    <button class="action-btn" id="createListingBtn">+ Create New Listing</button>
-                    <button class="action-btn" id="viewStorefrontBtn">View Public Storefront</button>
-                    <button class="action-btn action-btn--danger" id="deactivateStorefrontBtn">Deactivate Storefront</button>
+            <div class="store-info-layout">
+                <div class="store-info-primary">
+                    <!-- Removed by Day Ekoi - Iteration 5 - 4/20/26: inline brand-name heading replaced by page title above banner.
+                    <h2 class="brand-name" id="brandName">Loading...</h2>
+                    -->
+                    <p id="storeDescription" class="store-bio"></p>
+                    <p id="contactInfo" class="store-contact"></p>
+                </div>
+
+                <div class="store-info-secondary">
+                    <div class="dashboard-actions">
+                        <button class="action-btn" id="editStorefrontBtn">Edit Storefront</button>
+                        <button class="action-btn" id="createListingBtn">+ Create New Listing</button>
+                        <button class="action-btn" id="viewStorefrontBtn">View Public Storefront</button>
+                        <!-- Removed by Day Ekoi - Iteration 5 - 4/20/26: deactivate action hidden from primary dashboard controls to match simplified owner layout.
+                        <button class="action-btn action-btn--danger" id="deactivateStorefrontBtn">Deactivate Storefront</button>
+                        -->
+                    </div>
                 </div>
             </div>
-
-            <!-- contact + bio left-aligned below name -->
-            <p id="contactInfo" class="store-contact"></p>
-            <p id="storeDescription" class="store-bio"></p>
 
         </section>
 

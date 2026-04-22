@@ -26,7 +26,7 @@ const storefrontId = window.location.pathname.split("/").pop();
 const AUTH_ME_ENDPOINT = "/auth/api/auth/me";
 
 // get references to page elements
-const brandName = document.getElementById("brandName");
+const pageTitle = document.getElementById("pageTitle");
 const contactInfo = document.getElementById("contactInfo");
 const storeDescription = document.getElementById("storeDescription");
 const storefrontLogo = document.getElementById("storefrontLogo");
@@ -51,7 +51,7 @@ function setLocalWishlistItems(items) {
         title: item.title || item.name || item.listing?.title || "Untitled Listing",
         price: item.price ?? item.listing?.price ?? 0,
         image_url: item.image_url || item.listing?.image_url || item.storefront?.logo_url || "/static/images/logo.png",
-        storefront_name: item.storefront_name || item.storefront?.brand_name || brandName.textContent || "Storefront"
+        storefront_name: item.storefront_name || item.storefront?.brand_name || pageTitle?.textContent || "Storefront"
     }));
 
     localStorage.setItem("vaultWishlistLocalItems", JSON.stringify(normalized));
@@ -68,7 +68,7 @@ function addLocalWishlistItem(item) {
         title: item.title || item.name || "Untitled Listing",
         price: item.price,
         image_url: item.image_url || "/static/images/logo.png",
-        storefront_name: item.storefront_name || brandName.textContent || "Storefront"
+        storefront_name: item.storefront_name || pageTitle?.textContent || "Storefront"
     });
     setLocalWishlistItems(filtered);
 }
@@ -210,7 +210,7 @@ function createListingCard(item, wishlistIds, currentUserId) {
                     title,
                     price,
                     image_url: imageUrl,
-                    storefront_name: brandName.textContent || "Storefront"
+                    storefront_name: pageTitle?.textContent || "Storefront"
                 });
             } else {
                 wishlistIds.delete(String(listingId));
@@ -237,7 +237,7 @@ async function loadStorefrontView() {
         const storefront = await sfRes.json();
 
         // populate banner
-        brandName.textContent = storefront.brand_name || "Unnamed Storefront";
+        if (pageTitle) pageTitle.textContent = storefront.brand_name || "Unnamed Storefront";
         contactInfo.textContent = storefront.contact_info || "";
         storeDescription.textContent = storefront.bio || storefront.description || "No description provided.";
 
@@ -259,17 +259,7 @@ async function loadStorefrontView() {
         const sessionUser = await getCurrentSessionUser();
         const wishlistIds = await getWishlistIdSet(sessionUser?.id || null);
 
-        // show edit button if user owns this storefront
-        if (sessionUser?.id && storefront.owner_id && sessionUser.id === storefront.owner_id) {
-            const editBtn = document.createElement("button");
-            editBtn.className = "back-btn";
-            editBtn.style.cssText = "position:absolute; right:1.4rem; top:1.4rem; color:#d4af37; border:1px solid #d4af37; background:transparent; padding:6px 14px; border-radius:999px; cursor:pointer; text-transform:uppercase; font-weight:700; letter-spacing:1px;";
-            editBtn.textContent = "Edit Storefront";
-            editBtn.onclick = () => {
-                window.location.href = `/storefronts/${storefrontId}/edit`;
-            };
-            document.getElementById("storefrontBanner").appendChild(editBtn);
-        }
+        // Removed by Day Ekoi - Iteration 5 - 4/20/26: public storefront view no longer injects an edit button into the banner.
 
         // fetch listings for this storefront
         const listRes = await fetch(`/api/storefronts/${storefrontId}/listings`);
@@ -293,7 +283,7 @@ async function loadStorefrontView() {
 
     } catch (error) {
         console.error("Error loading storefront view:", error);
-        brandName.textContent = "Storefront Unavailable";
+        if (pageTitle) pageTitle.textContent = "Storefront Unavailable";
         storeDescription.textContent = "Could not load storefront details. Please try again.";
         renderEmpty("Could not load listings.");
     }
@@ -410,5 +400,4 @@ backBtn.addEventListener("click", () => {
 // initial render
 renderListings();
 */
-
 

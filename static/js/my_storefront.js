@@ -6,6 +6,7 @@
     Created by Day Ekoi - Iteration 4 - 3/22/2026
     Implemented & Updated by Day Ekoi - Iteration 5 - 4/9/2026
     Updated by Day Ekoi - Iteration 5 - 4/20/26 - added deactivate storefront button handler
+    Updated by Day Ekoi - Iteration 5 - 4/20/26 - guarded optional dashboard buttons after layout cleanup
 
 Description:
 Fetches the current user's storefront from the API and renders
@@ -15,7 +16,7 @@ Handles Edit Storefront, Create Listing, View Public Storefront, and Deactivate 
 
 
 // get references
-const brandName = document.getElementById("brandName");
+const pageTitle = document.getElementById("pageTitle");
 const storeDescription = document.getElementById("storeDescription");
 const contactInfo = document.getElementById("contactInfo");
 const bannerBox = document.getElementById("bannerBox");
@@ -78,7 +79,7 @@ async function loadMyStorefront() {
         });
 
         if (!sfRes.ok) { // updated by Day E 4/9/26 - if user has no storefront, show empty state instead of redirecting to create page
-            brandName.textContent = "No Storefront Found";
+            if (pageTitle) pageTitle.textContent = "No Storefront Found";
             renderEmpty(`
                 <div style="text-align:center; padding:2rem;">
                     <p style="color:#888; font-style:italic; margin-bottom:1rem;">You don't have a storefront yet.</p>
@@ -95,7 +96,7 @@ async function loadMyStorefront() {
         storefrontId = storefront.id;
 
         // populate brand name, bio, contact info - Updated by Day Ekoi 4/20/26
-        brandName.textContent = storefront.brand_name || "My Storefront";
+        if (pageTitle) pageTitle.textContent = storefront.brand_name || "My Storefront";
         if (storefront.contact_info) contactInfo.textContent = storefront.contact_info;
         if (storefront.bio) storeDescription.textContent = storefront.bio;
 
@@ -115,19 +116,26 @@ async function loadMyStorefront() {
         }
 
         // wire up buttons now that we have storefront ID
-        editStorefrontBtn.onclick = () => {
-            window.location.href = `/storefronts/${storefrontId}/edit`;
-        };
+        if (editStorefrontBtn) {
+            editStorefrontBtn.onclick = () => {
+                window.location.href = `/storefronts/${storefrontId}/edit`;
+            };
+        }
 
-        viewStorefrontBtn.onclick = () => {
-            window.location.href = `/storefronts/${storefrontId}`;
-        };
+        if (viewStorefrontBtn) {
+            viewStorefrontBtn.onclick = () => {
+                window.location.href = `/storefronts/${storefrontId}`;
+            };
+        }
 
-        createListingBtn.onclick = () => {
-            window.location.href = "/listings/create";
-        };
+        if (createListingBtn) {
+            createListingBtn.onclick = () => {
+                window.location.href = "/listings/create";
+            };
+        }
 
-        deactivateStorefrontBtn.onclick = async () => {
+        if (deactivateStorefrontBtn) {
+            deactivateStorefrontBtn.onclick = async () => {
             const confirmed = confirm(
                 "Are you sure you want to deactivate your storefront?\n\nIt will be hidden from the marketplace. You can reactivate it later by contacting support."
             );
@@ -152,7 +160,8 @@ async function loadMyStorefront() {
             } catch (e) {
                 alert("Something went wrong. Please try again.");
             }
-        };
+            };
+        }
 
         // fetch listings
         const listRes = await fetch(`/api/storefronts/${storefrontId}/listings`, {
@@ -180,7 +189,7 @@ async function loadMyStorefront() {
 
     } catch (error) {
         console.error("Error loading my storefront:", error);
-        brandName.textContent = "Could not load storefront.";
+        if (pageTitle) pageTitle.textContent = "Could not load storefront.";
         renderEmpty("Something went wrong.");
     }
 }
