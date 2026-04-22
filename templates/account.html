@@ -110,11 +110,31 @@
             font-size: 0.8rem;
             text-transform: uppercase;
         }
-        .wishlist-remove-btn:hover {
-            border-color: #aaa;
-            color: #fff;
+        .wishlist-remove-btn:hover { border-color: #aaa; color: #fff; }
+
+        .wishlist-cart-btn {
+            border: 1px solid var(--gold);
+            background: transparent;
+            color: var(--gold);
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-right: 6px;
         }
-        
+        .wishlist-cart-btn:hover { background: rgba(184,134,11,0.15); }
+        .wishlist-cart-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .purchase-items { display: grid; gap: 12px; margin-top: 16px; }
+        .purchase-row {
+            border: 1px solid #333;
+            background: #111;
+            padding: 14px;
+        }
+        .purchase-conf { color: var(--gold); font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; }
+        .purchase-meta { color: #aaa; font-size: 0.85rem; margin-top: 4px; }
+        .purchase-total { color: var(--gold); font-weight: bold; float: right; }
+
         .back-btn { color: var(--gold); text-decoration: none; font-size: 0.9rem; }
     </style>
 </head>
@@ -154,7 +174,8 @@
 
     <div id="purchases" class="tab-content">
         <h3>PURCHASE HISTORY</h3>
-        <p class="empty-state">No transaction records found.</p>
+        <p id="purchasesEmptyState" class="empty-state">Loading your orders...</p>
+        <div id="purchasesContainer" class="purchase-items"></div>
     </div>
 
     <div id="sales" class="tab-content">
@@ -194,9 +215,8 @@
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
 
-        if (tabName === "wishlist") {
-            loadWishlist();
-        }
+        if (tabName === "wishlist") loadWishlist();
+        if (tabName === "purchases") loadPurchases();
     }
 
     function getLocalWishlistItems() {
@@ -214,8 +234,8 @@
             listing_id: Number(item.listing_id || item.id),
             title: item.title || item.name || item.listing?.title || "Untitled Listing",
             price: item.price ?? item.listing?.price ?? 0,
-            image_url: item.image_url || item.listing?.image_url || item.storefront?.logo_url || "/static/images/logo.png",
-            storefront_name: item.storefront_name || item.storefront?.brand_name || "Storefront"
+            image_url: item.listing?.image_url || item.image_url || item.storefront?.logo_url || "/static/images/logo.png",
+            storefront_name: item.storefront_name || item.storefront?.brand_name || "Storefront",
         };
     }
 
@@ -254,14 +274,60 @@
             row.className = "wishlist-row";
             row.innerHTML = `
                 <div class="wishlist-left">
-                    <img class="wishlist-thumb" src="${item.image_url || "/static/images/logo.png"}" alt="${item.title || "Wishlist item"}">
+                    <img class="wishlist-thumb" src="${item.image_url || "/static/images/logo.png"}"
+                         alt="${item.title || "Wishlist item"}"
+                         onerror="this.src='/static/images/logo.png'">
                     <div>
                         <div class="wishlist-title">${item.title || "Untitled Listing"}</div>
                         <div class="wishlist-meta">${item.storefront_name || "Storefront"} | ${formatWishlistPrice(item.price)}</div>
                     </div>
                 </div>
-                <button class="wishlist-remove-btn" type="button">Remove</button>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button class="wishlist-cart-btn" type="button">+ Cart</button>
+                    <button class="wishlist-remove-btn" type="button">Remove</button>
+                </div>
             `;
+
+            const cartBtn = row.querySelector(".wishlist-cart-btn");
+            cartBtn.addEventListener("click", async () => {
+                cartBtn.disabled = true;
+                cartBtn.textContent = "Adding...";
+                try {
+                    // Fetch available sizes to pick a default
+                    let defaultSize = null;
+                    try {
+                        const sizesRes = await fetch(`/api/listings/${item.listing_id}/sizes`);
+                        if (sizesRes.ok) {
+                            const sizesData = await sizesRes.json();
+                            if (Array.isArray(sizesData) && sizesData.length > 0) {
+                                defaultSize = sizesData[0].size;
+                            }
+                        }
+                    } catch (_) {}
+
+                    const formData = new FormData();
+                    formData.append("item_id", String(item.listing_id));
+                    formData.append("item_name", item.title || "Item");
+                    formData.append("price", String(item.price || 0));
+                    formData.append("quantity", "1");
+                    if (defaultSize) formData.append("size", defaultSize);
+
+                    const res = await fetch("/auth/add_to_cart", { method: "POST", body: formData });
+                    if (res.ok || res.redirected) {
+                        cartBtn.textContent = "Added!";
+                        setTimeout(() => {
+                            cartBtn.textContent = "+ Cart";
+                            cartBtn.disabled = false;
+                        }, 2000);
+                    } else {
+                        throw new Error("Could not add to cart.");
+                    }
+                } catch (err) {
+                    alert("Unable to add to cart: " + err.message);
+                    cartBtn.textContent = "+ Cart";
+                    cartBtn.disabled = false;
+                }
+            });
 
             const removeBtn = row.querySelector(".wishlist-remove-btn");
             removeBtn.addEventListener("click", async () => {
@@ -272,9 +338,7 @@
                     if (userId) {
                         const response = await fetch(`/api/wishlist/${Number(item.listing_id || item.id)}`, {
                             method: "DELETE",
-                            headers: {
-                                "X-User-Id": String(userId)
-                            }
+                            headers: { "X-User-Id": String(userId) }
                         });
 
                         const result = await response.json().catch(() => ({}));
@@ -425,6 +489,53 @@
             if (emptyState) {
                 emptyState.textContent = "Unable to load listings right now.";
             }
+        }
+    }
+
+    async function loadPurchases() {
+        const emptyState = document.getElementById("purchasesEmptyState");
+        const container = document.getElementById("purchasesContainer");
+
+        try {
+            const res = await fetch("/api/orders/my");
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || "Failed to load orders");
+
+            const orders = Array.isArray(data.orders) ? data.orders : [];
+
+            if (!orders.length) {
+                if (emptyState) emptyState.textContent = "No transaction records found.";
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = "none";
+            if (container) container.innerHTML = "";
+
+            orders.forEach((order) => {
+                const date = order.created_at
+                    ? new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+                    : "N/A";
+                const row = document.createElement("div");
+                row.className = "purchase-row";
+                row.innerHTML = `
+                    <div class="purchase-conf">${order.confirmation_number}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <div class="purchase-meta">${date} &nbsp;|&nbsp; ${order.order_status}</div>
+                        <span class="purchase-total">$${parseFloat(order.total_amount).toFixed(2)}</span>
+                    </div>
+                    <div class="purchase-meta" style="margin-top:6px;">
+                        ${order.buyer_first_name} ${order.buyer_last_name}
+                        &nbsp;&mdash;&nbsp;
+                        <a href="/order-confirmation?conf=${encodeURIComponent(order.confirmation_number)}"
+                           style="color:var(--gold); font-size:0.8rem;">View Details</a>
+                    </div>
+                `;
+                if (container) container.appendChild(row);
+            });
+        } catch (error) {
+            console.error("Error loading purchases:", error);
+            if (emptyState) emptyState.textContent = "Unable to load orders right now.";
         }
     }
 

@@ -24,6 +24,19 @@ from models.storefront_model import (
     update_storefront,
     set_storefront_active
 )
+from services.listing_service import (
+    deactivate_storefront_listings_service,
+    restore_storefront_listings_service,
+)
+
+MAX_STOREFRONT_CATEGORIES = 3
+
+# Updated by Day E - April 22nd
+# Storefront state rules:
+# - is_active = TRUE: storefront is public
+# - is_active = FALSE: storefront is owner/admin accessible but hidden from public users
+# - storefront deactivation pauses only listings that were ACTIVE/SOLD_OUT
+# - storefront reactivation restores only listings carrying storefront_restore_status
 
 
 def is_admin(current_user):
@@ -31,6 +44,38 @@ def is_admin(current_user):
     Returns True if the logged-in user is an admin.
     """
     return current_user.get("role") == "admin"
+
+
+def normalize_storefront_categories(raw_categories):
+    """
+    Accepts storefront categories as a comma-delimited string or list,
+    trims values, removes duplicates, and enforces the max selection limit.
+    """
+    if raw_categories is None:
+        return None
+
+    if isinstance(raw_categories, str):
+        values = [value.strip() for value in raw_categories.split(",")]
+    elif isinstance(raw_categories, list):
+        values = [str(value).strip() for value in raw_categories]
+    else:
+        raise Exception("categories must be a string or list.")
+
+    cleaned = []
+    seen = set()
+    for value in values:
+        if not value:
+            continue
+        normalized_key = value.lower()
+        if normalized_key in seen:
+            continue
+        seen.add(normalized_key)
+        cleaned.append(value)
+
+    if len(cleaned) > MAX_STOREFRONT_CATEGORIES:
+        raise Exception(f"You can select up to {MAX_STOREFRONT_CATEGORIES} storefront categories.")
+
+    return ",".join(cleaned) if cleaned else None
 
 
 def create_storefront_service(current_user, data):
@@ -57,6 +102,8 @@ def create_storefront_service(current_user, data):
     if not brand_name:
         raise Exception("brand_name is required")
 
+    categories = normalize_storefront_categories(data.get("categories"))
+
     # Rule 4: Call model to insert into database
     return create_storefront(
         owner_id=current_user["id"],
@@ -69,7 +116,7 @@ def create_storefront_service(current_user, data):
         preview_image_2=data.get("preview_image_2"),
         preview_image_3=data.get("preview_image_3"),
         preview_image_4=data.get("preview_image_4"),
-        categories=data.get("categories"),
+        categories=categories,
     )
 
 
@@ -115,6 +162,8 @@ def update_storefront_service(current_user, storefront_id, data):
         if not clean["brand_name"]:
             raise Exception("brand_name cannot be empty.")
 
+    clean["categories"] = normalize_storefront_categories(clean.get("categories"))
+
     return update_storefront(
         storefront_id=storefront_id,
         brand_name=clean.get("brand_name"),
@@ -146,4 +195,26 @@ def deactivate_storefront_service(current_user, storefront_id):
     if not is_owner and not is_admin(current_user):
         raise Exception("Unauthorized action.")
 
-    return set_storefront_active(storefront_id, False)
+    updated = set_storefront_active(storefront_id, False)
+    deactivate_storefront_listings_service(storefront_id)
+    return updated
+
+
+def reactivate_storefront_service(current_user, storefront_id):
+    """
+    Restores a previously deactivated storefront and any listings paused by that storefront shutdown.
+    """
+    if not current_user:
+        raise Exception("Error! Unauthorized User.")
+
+    storefront = get_storefront_by_id(storefront_id)
+    if not storefront:
+        raise Exception("Storefront not found.")
+
+    is_owner = (storefront["owner_id"] == current_user["id"])
+    if not is_owner and not is_admin(current_user):
+        raise Exception("Unauthorized action.")
+
+    updated = set_storefront_active(storefront_id, True)
+    restore_storefront_listings_service(storefront_id)
+    return updated

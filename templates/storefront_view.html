@@ -54,6 +54,16 @@
         <div class="listing-grid" id="listingGrid"></div>
     </section>
 
+    <div class="listing-lightbox" id="listingLightbox">
+        <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close image preview">&times;</button>
+        <button class="lightbox-nav lightbox-nav--left" id="lightboxPrev" type="button" aria-label="Previous image">&#10094;</button>
+        <div class="lightbox-stage">
+            <img id="lightboxImage" class="lightbox-image" alt="Listing preview">
+            <div id="lightboxDots" class="lightbox-dots"></div>
+        </div>
+        <button class="lightbox-nav lightbox-nav--right" id="lightboxNext" type="button" aria-label="Next image">&#10095;</button>
+    </div>
+
 </main>
 
 <script src="{{ url_for('static', filename='js/storefront_view.js') }}"></script>

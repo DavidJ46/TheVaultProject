@@ -205,6 +205,7 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
                 <div class="form-card category-card">
 
                     <p class="section-label"> Enter Store Categories</p>
+                    <p class="category-limit-copy">Select up to 3 categories for your storefront.</p>
 
                     <div class="category-grid">
                         <label><input type="checkbox" name="categories" value="Streetwear"> Streetwear</label>
@@ -216,6 +217,8 @@ This file acts as the UI structure (skeleton) of the Create Storefront feature.
                         <label><input type="checkbox" name="categories" value="Accessories"> Accessories</label>
                         <label><input type="checkbox" name="categories" value="Other"> Other</label>
                     </div>
+
+                    <p class="category-validation-message" id="categoryValidationMessage" aria-live="polite"></p>
 
                 </div>
 

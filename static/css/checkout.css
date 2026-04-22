@@ -103,3 +103,34 @@ input, textarea {
     filter: brightness(1.2);
     transform: translateY(-2px);
 }
+
+.primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.gold { color: #d4af37; }
+
+.helper-text { color: #888; font-size: 0.9rem; }
+
+.error-msg {
+    background: rgba(180, 40, 40, 0.2);
+    border: 1px solid rgba(200, 60, 60, 0.5);
+    color: #ff8a8a;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.price-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 20px 0 16px;
+    border-top: 1px solid rgba(184, 134, 11, 0.4);
+    padding-top: 16px;
+}
+
+.brand-title { font-size: 1.8rem; margin: 0; letter-spacing: 2px; }
+.brand-subtitle { color: #888; margin: 4px 0 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+.brand-block { text-align: right; }

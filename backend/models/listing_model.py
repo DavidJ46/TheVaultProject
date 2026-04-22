@@ -39,7 +39,8 @@ def create_listing(
     fulfillment_type,
     quantity_on_hand=None,
     sizes_available=None,
-    status="ACTIVE"
+    status="ACTIVE",
+    is_made_to_order=False
 ):
     """
     Inserts a new listing and returns the created listing as a dictionary.
@@ -49,11 +50,11 @@ def create_listing(
 
     query = """
         INSERT INTO listings
-        (storefront_id, title, description, price, fulfillment_type, quantity_on_hand, sizes_available, status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        (storefront_id, title, description, price, fulfillment_type, quantity_on_hand, sizes_available, status, is_made_to_order)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id, storefront_id, title, description, price,
                   fulfillment_type, quantity_on_hand, sizes_available,
-                  status, created_at, updated_at;
+                  status, created_at, updated_at, is_made_to_order;
     """
 
     cur.execute(query, (
@@ -64,7 +65,8 @@ def create_listing(
         fulfillment_type,
         quantity_on_hand,
         sizes_available,
-        status
+        status,
+        bool(is_made_to_order)
     ))
 
     row = cur.fetchone()
@@ -85,6 +87,7 @@ def create_listing(
         "status": row[8],
         "created_at": row[9],
         "updated_at": row[10],
+        "is_made_to_order": row[11],
     }
 
 
@@ -97,11 +100,15 @@ def get_listing_by_id(listing_id):
     cur = conn.cursor()
 
     query = """
-        SELECT id, storefront_id, title, description, price,
-               fulfillment_type, quantity_on_hand, sizes_available,
-               status, created_at, updated_at
-        FROM listings
-        WHERE id = %s;
+        SELECT l.id, l.storefront_id, l.title, l.description, l.price,
+               l.fulfillment_type, l.quantity_on_hand, l.sizes_available,
+               l.status, l.storefront_restore_status, l.deleted_restore_status,
+               l.created_at, l.updated_at,
+               li.image_url, l.is_made_to_order
+        FROM listings l
+        LEFT JOIN listing_images li
+            ON li.listing_id = l.id AND li.is_primary = TRUE
+        WHERE l.id = %s;
     """
 
     cur.execute(query, (listing_id,))
@@ -123,12 +130,16 @@ def get_listing_by_id(listing_id):
         "quantity_on_hand": row[6],
         "sizes_available": row[7],
         "status": row[8],
-        "created_at": row[9],
-        "updated_at": row[10],
+        "storefront_restore_status": row[9],
+        "deleted_restore_status": row[10],
+        "created_at": row[11],
+        "updated_at": row[12],
+        "image_url": row[13],
+        "is_made_to_order": bool(row[14]) if row[14] is not None else False,
     }
 
 
-def get_listings_by_storefront_id(storefront_id):
+def get_listings_by_storefront_id(storefront_id, include_deleted=False):
     """
     Retrieves all non-deleted listings for a storefront.
     Returns a list of listing dictionaries.
@@ -139,17 +150,18 @@ def get_listings_by_storefront_id(storefront_id):
     query = """
         SELECT l.id, l.storefront_id, l.title, l.description, l.price,
                l.fulfillment_type, l.quantity_on_hand, l.sizes_available,
-               l.status, l.created_at, l.updated_at,
-               li.image_url
+               l.status, l.storefront_restore_status, l.deleted_restore_status,
+               l.created_at, l.updated_at,
+               li.image_url, l.is_made_to_order
         FROM listings l
         LEFT JOIN listing_images li
             ON li.listing_id = l.id AND li.is_primary = TRUE
         WHERE l.storefront_id = %s
-          AND l.status != 'DELETED'
+          AND (%s = TRUE OR l.status != 'DELETED')
         ORDER BY l.created_at DESC;
     """
 
-    cur.execute(query, (storefront_id,))
+    cur.execute(query, (storefront_id, include_deleted))
     rows = cur.fetchall()
 
     cur.close()
@@ -167,9 +179,12 @@ def get_listings_by_storefront_id(storefront_id):
             "quantity_on_hand": row[6],
             "sizes_available": row[7],
             "status": row[8],
-            "created_at": row[9],
-            "updated_at": row[10],
-            "image_url": row[11],
+            "storefront_restore_status": row[9],
+            "deleted_restore_status": row[10],
+            "created_at": row[11],
+            "updated_at": row[12],
+            "image_url": row[13],
+            "is_made_to_order": bool(row[14]) if row[14] is not None else False,
         })
 
     return listings
@@ -183,7 +198,8 @@ def update_listing(
     fulfillment_type=None,
     quantity_on_hand=None,
     sizes_available=None,
-    status=None
+    status=None,
+    is_made_to_order=None
 ):
     """
     Updates editable listing fields using COALESCE and returns updated listing.
@@ -201,11 +217,12 @@ def update_listing(
             quantity_on_hand = COALESCE(%s, quantity_on_hand),
             sizes_available = COALESCE(%s, sizes_available),
             status = COALESCE(%s, status),
+            is_made_to_order = COALESCE(%s, is_made_to_order),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = %s
         RETURNING id, storefront_id, title, description, price,
                   fulfillment_type, quantity_on_hand, sizes_available,
-                  status, created_at, updated_at;
+                  status, created_at, updated_at, is_made_to_order;
     """
 
     cur.execute(query, (
@@ -216,6 +233,7 @@ def update_listing(
         quantity_on_hand,
         sizes_available,
         status,
+        is_made_to_order,
         listing_id
     ))
 
@@ -240,6 +258,7 @@ def update_listing(
         "status": row[8],
         "created_at": row[9],
         "updated_at": row[10],
+        "is_made_to_order": bool(row[11]) if row[11] is not None else False,
     }
 
 
@@ -247,7 +266,142 @@ def soft_delete_listing(listing_id):
     """
     Soft deletes a listing by setting status = 'DELETED'.
     """
-    return update_listing(listing_id, status="DELETED")
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        UPDATE listings
+        SET deleted_restore_status = COALESCE(storefront_restore_status, status),
+            storefront_restore_status = NULL,
+            status = 'DELETED',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+        RETURNING id, storefront_id, title, description, price,
+                  fulfillment_type, quantity_on_hand, sizes_available,
+                  status, created_at, updated_at, is_made_to_order;
+    """
+
+    cur.execute(query, (listing_id,))
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "storefront_id": row[1],
+        "title": row[2],
+        "description": row[3],
+        "price": float(row[4]),
+        "fulfillment_type": row[5],
+        "quantity_on_hand": row[6],
+        "sizes_available": row[7],
+        "status": row[8],
+        "created_at": row[9],
+        "updated_at": row[10],
+        "is_made_to_order": bool(row[11]) if row[11] is not None else False,
+    }
+
+
+def deactivate_listing(listing_id):
+    return update_listing_status(listing_id, "INACTIVE", storefront_restore_status=None, deleted_restore_status=None)
+
+
+def reactivate_listing(listing_id, restored_status):
+    return update_listing_status(listing_id, restored_status, storefront_restore_status=None, deleted_restore_status=None)
+
+
+def restore_deleted_listing(listing_id, restored_status, storefront_restore_status=None):
+    return update_listing_status(
+        listing_id,
+        restored_status,
+        storefront_restore_status=storefront_restore_status,
+        deleted_restore_status=None
+    )
+
+
+def update_listing_status(listing_id, status, storefront_restore_status=None, deleted_restore_status=None):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        UPDATE listings
+        SET status = %s,
+            storefront_restore_status = %s,
+            deleted_restore_status = %s,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = %s
+        RETURNING id, storefront_id, title, description, price,
+                  fulfillment_type, quantity_on_hand, sizes_available,
+                  status, storefront_restore_status, deleted_restore_status,
+                  created_at, updated_at, is_made_to_order;
+    """
+
+    cur.execute(query, (status, storefront_restore_status, deleted_restore_status, listing_id))
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "storefront_id": row[1],
+        "title": row[2],
+        "description": row[3],
+        "price": float(row[4]),
+        "fulfillment_type": row[5],
+        "quantity_on_hand": row[6],
+        "sizes_available": row[7],
+        "status": row[8],
+        "storefront_restore_status": row[9],
+        "deleted_restore_status": row[10],
+        "created_at": row[11],
+        "updated_at": row[12],
+        "is_made_to_order": bool(row[13]) if row[13] is not None else False,
+    }
+
+
+def deactivate_active_listings_for_storefront(storefront_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE listings
+        SET storefront_restore_status = status,
+            status = 'INACTIVE',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE storefront_id = %s
+          AND status IN ('ACTIVE', 'SOLD_OUT');
+    """, (storefront_id,))
+    updated_count = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+    return updated_count
+
+
+def restore_listings_after_storefront_reactivation(storefront_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE listings
+        SET status = storefront_restore_status,
+            storefront_restore_status = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE storefront_id = %s
+          AND status = 'INACTIVE'
+          AND storefront_restore_status IS NOT NULL;
+    """, (storefront_id,))
+    updated_count = cur.rowcount
+    conn.commit()
+    cur.close()
+    conn.close()
+    return updated_count
 
 
 # ________________________________________________________

@@ -1,184 +1,118 @@
 # The Vault Campus Marketplace
 # CSC 405 Sp 26'
+# Updated by Day Ekoi - 4/22/26
 
-"""
-checkout_service.py
-
-Purpose:
-This file contains system rules + validation logic for checkout.
-
-This file handles:
-- User validation
-- Cart validation
-- Total cost calculation
-- Inventory checks
-- Saved user checkout info retrieval
-- Multi-step checkout processing
-- Calls model functions to run SQL queries
-
-Rules enforced:
-- User must be logged in to checkout
-- Cart cannot be empty
-- ACTIVE listings only can be purchased
-- IN_STOCK listings must have enough quantity available
-- PREORDER listings do not require quantity_on_hand
-- Order total is calculated from current listing prices
-- Cart is cleared only after successful order creation
-"""
+import random
+import string
+from datetime import datetime
 
 from models.checkout_model import (
-    get_checkout_user_info,
-    get_cart_items_for_user,
     create_order,
     create_order_item,
+    get_order_by_confirmation,
+    get_order_items_by_order_id,
+    get_orders_by_user_id,
     clear_cart_for_user,
-    update_listing_inventory
+    update_listing_size_inventory,
+    remove_purchased_from_wishlist,
 )
 
 
-def calculate_cart_total(cart_items):
+def _generate_confirmation_number():
+    date_str = datetime.now().strftime("%y%m%d")
+    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"VAULT-{date_str}-{suffix}"
+
+
+def complete_transaction_from_session(user_id, session_cart, buyer_details):
     """
-    Calculates total price of all cart items.
+    Completes checkout using session cart and submitted buyer details.
+
+    buyer_details keys: first_name, last_name, email, contact, meeting_location
+    session_cart items: { id, name, price, quantity, size }
     """
-    total = 0.0
-
-    for item in cart_items:
-        total += float(item["price"]) * int(item["quantity"])
-
-    return round(total, 2)
-
-
-def get_checkout_screen_data_service(current_user):
-    """
-    Retrieves all data needed to render the checkout screen.
-
-    Returns:
-    - saved user checkout info
-    - cart items
-    - calculated total
-    """
-    if current_user is None:
-        raise Exception("Unauthorized user.")
-
-    user_id = current_user.get("id")
-    if user_id is None:
-        raise Exception("Invalid user session.")
-
-    user_info = get_checkout_user_info(user_id)
-    if user_info is None:
-        raise Exception("User not found.")
-
-    cart_items = get_cart_items_for_user(user_id)
-    total_amount = calculate_cart_total(cart_items)
-
-    return {
-        "user_info": user_info,
-        "cart_items": cart_items,
-        "total_amount": total_amount
-    }
-
-
-def _validate_cart_items(cart_items):
-    """
-    Validates cart items before checkout.
-    """
-    if not cart_items:
+    if not session_cart:
         raise Exception("Cart is empty.")
 
-    for item in cart_items:
-        if item["status"] != "ACTIVE":
-            raise Exception(f"Listing '{item['title']}' is not available for purchase.")
+    first_name = (buyer_details.get("first_name") or "").strip()
+    last_name = (buyer_details.get("last_name") or "").strip()
+    email = (buyer_details.get("email") or "").strip()
+    contact = (buyer_details.get("contact") or "").strip()
+    meeting_location = (buyer_details.get("meeting_location") or "").strip()
 
-        if item["price"] is None:
-            raise Exception(f"Listing '{item['title']}' is missing a valid price.")
+    if not all([first_name, last_name, email, contact, meeting_location]):
+        raise Exception("All buyer details are required.")
 
-        if int(item["quantity"]) <= 0:
-            raise Exception(f"Listing '{item['title']}' has an invalid cart quantity.")
+    total_amount = round(
+        sum(float(item.get("price", 0)) * int(item.get("quantity", 1)) for item in session_cart),
+        2,
+    )
 
-        fulfillment_type = item["fulfillment_type"]
-
-        if fulfillment_type == "IN_STOCK":
-            quantity_on_hand = item["quantity_on_hand"]
-
-            if quantity_on_hand is None:
-                raise Exception(f"Listing '{item['title']}' is missing inventory data.")
-
-            if int(item["quantity"]) > int(quantity_on_hand):
-                raise Exception(
-                    f"Not enough inventory for '{item['title']}'. "
-                    f"Requested {item['quantity']}, available {quantity_on_hand}."
-                )
-
-
-def complete_transaction_service(current_user):
-    """
-    Completes the checkout transaction.
-
-    Steps:
-    - verify logged in user
-    - retrieve saved user info
-    - retrieve cart items
-    - validate cart/inventory
-    - calculate total
-    - create order
-    - create order item rows
-    - update inventory where needed
-    - clear cart
-    - return order summary
-    """
-    if current_user is None:
-        raise Exception("Unauthorized user.")
-
-    user_id = current_user.get("id")
-    if user_id is None:
-        raise Exception("Invalid user session.")
-
-    user_info = get_checkout_user_info(user_id)
-    if user_info is None:
-        raise Exception("User not found.")
-
-    cart_items = get_cart_items_for_user(user_id)
-    _validate_cart_items(cart_items)
-
-    total_amount = calculate_cart_total(cart_items)
+    confirmation_number = _generate_confirmation_number()
 
     order = create_order(
         user_id=user_id,
+        confirmation_number=confirmation_number,
+        buyer_first_name=first_name,
+        buyer_last_name=last_name,
+        buyer_email=email,
+        buyer_contact=contact,
+        buyer_meeting_location=meeting_location,
         total_amount=total_amount,
-        order_status="SUBMITTED"
     )
 
     order_items = []
+    for item in session_cart:
+        item_id = item.get("id")
+        item_name = item.get("name", "Item")
+        quantity = int(item.get("quantity", 1))
+        price = float(item.get("price", 0))
+        size = item.get("size")
 
-    for item in cart_items:
         order_item = create_order_item(
             order_id=order["id"],
-            listing_id=item["listing_id"],
-            quantity=item["quantity"],
-            price_at_purchase=item["price"],
-            selected_size=item["selected_size"]
+            listing_id=item_id,
+            item_name=item_name,
+            quantity=quantity,
+            price_at_purchase=price,
+            selected_size=size,
         )
         order_items.append(order_item)
 
-        if item["fulfillment_type"] == "IN_STOCK":
-            new_quantity = int(item["quantity_on_hand"]) - int(item["quantity"])
-
-            new_status = None
-            if new_quantity == 0:
-                new_status = "SOLD_OUT"
-
-            update_listing_inventory(
-                listing_id=item["listing_id"],
-                new_quantity=new_quantity,
-                new_status=new_status
-            )
+        if item_id and size:
+            try:
+                update_listing_size_inventory(int(item_id), size, quantity)
+            except Exception as e:
+                print(f"[checkout] inventory update failed for listing {item_id} size {size}: {e}")
 
     clear_cart_for_user(user_id)
 
+    # Remove purchased listings from the user's wishlist
+    purchased_listing_ids = [item.get("id") for item in session_cart if item.get("id") is not None]
+    try:
+        remove_purchased_from_wishlist(user_id, purchased_listing_ids)
+    except Exception as e:
+        print(f"[checkout] wishlist cleanup failed: {e}")
+
     return {
-        "message": "Order submitted successfully.",
+        "confirmation_number": confirmation_number,
         "order": order,
         "order_items": order_items,
-        "user_info": user_info,
-        "total_amount": total_amount
+        "total_amount": total_amount,
     }
+
+
+def get_order_summary_service(confirmation_number, user_id):
+    """Returns order + items for the confirmation page. Validates user ownership."""
+    order = get_order_by_confirmation(confirmation_number)
+    if not order:
+        raise Exception("Order not found.")
+    if order["user_id"] != user_id:
+        raise Exception("Access denied.")
+    items = get_order_items_by_order_id(order["id"])
+    return {"order": order, "order_items": items}
+
+
+def get_user_orders_service(user_id):
+    """Returns all orders for the given user, newest first."""
+    return get_orders_by_user_id(user_id)

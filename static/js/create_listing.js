@@ -5,22 +5,15 @@ The Vault Campus Marketplace
 CSC 405 Sp 26
 Created by Elali McNair - Iteration 4
 Updated by Day Ekoi - Iteration 5 4/9/26
+Updated by Day Ekoi - Iteration 5 4/22/26 - One Size mode, per-size quantities, Made-to-Order
 
 Purpose:
-This file handles the form submission for the Create Listing page.
-It collects form data, validates it, and submits it to the Flask backend API.
-
-The form includes:
-- Storefront name (to identify which storefront to assign the listing)
-- Listing name/title
-- Available sizes (checkboxes for S, M, L)
-- Count/quantity available
-- Price
-
-This data is sent to the backend via the listing creation API endpoint.
+Handles form submission for Create Listing page. Supports:
+- One Size mode (single quantity, no other sizes selectable)
+- Multi-size mode (per-size quantity inputs)
+- Made-to-Order flag (bypasses inventory limits)
 */
 
-// Wait for DOM content to be fully loaded before accessing elements
 document.addEventListener('DOMContentLoaded', function() {
 
   function ensureToastRoot() {
@@ -47,12 +40,61 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2200);
   }
 
-  // Get form elements
   const listingForm = document.getElementById("listingForm");
   const cancelBtn = document.getElementById("cancelBtn");
   const storefrontSelect = document.getElementById("storefrontSelect");
   const previewInputs = [1, 2, 3, 4].map((index) => document.getElementById(`previewImage${index}`));
   const selectedListingImages = [null, null, null, null];
+
+  // ── Size mode elements ──────────────────────────────────────
+  const oneSizeToggle = document.getElementById("oneSizeToggle");
+  const multiSizeGrid = document.getElementById("multiSizeGrid");
+  const oneSizeQtyRow = document.getElementById("oneSizeQtyRow");
+  const oneSizeQty = document.getElementById("oneSizeQty");
+  const madeToOrderToggle = document.getElementById("madeToOrderToggle");
+
+  function applyOneSizeMode(enabled) {
+    if (!multiSizeGrid || !oneSizeQtyRow) return;
+    if (enabled) {
+      // Hide multi-size grid, clear all checkboxes and qty inputs
+      multiSizeGrid.style.display = "none";
+      multiSizeGrid.querySelectorAll('input[name="sizes"]').forEach(cb => {
+        cb.checked = false;
+      });
+      multiSizeGrid.querySelectorAll(".size-qty-input").forEach(inp => {
+        inp.value = "";
+        inp.style.display = "none";
+      });
+      oneSizeQtyRow.style.display = "block";
+    } else {
+      multiSizeGrid.style.display = "";
+      oneSizeQtyRow.style.display = "none";
+      if (oneSizeQty) oneSizeQty.value = "";
+    }
+  }
+
+  if (oneSizeToggle) {
+    oneSizeToggle.addEventListener("change", () => {
+      applyOneSizeMode(oneSizeToggle.checked);
+    });
+  }
+
+  // Show/hide per-size quantity input when a size checkbox is toggled
+  if (multiSizeGrid) {
+    multiSizeGrid.querySelectorAll('input[name="sizes"]').forEach(cb => {
+      cb.addEventListener("change", () => {
+        const row = cb.closest(".size-qty-row");
+        if (!row) return;
+        const qtyInput = row.querySelector(".size-qty-input");
+        if (qtyInput) {
+          qtyInput.style.display = cb.checked ? "inline-block" : "none";
+          if (!cb.checked) qtyInput.value = "";
+        }
+      });
+    });
+  }
+
+  // ── Image preview / drop zone ────────────────────────────────
 
   function renderSinglePreview(previewContainer, file, zone, slotIndex) {
     if (!previewContainer) return;
@@ -63,9 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         zone.classList.remove("has-image");
         zone.style.backgroundImage = "";
         const existingBadge = zone.querySelector(".image-selected-badge");
-        if (existingBadge) {
-          existingBadge.remove();
-        }
+        if (existingBadge) existingBadge.remove();
       }
       return;
     }
@@ -92,9 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
       zone.classList.add("has-image");
 
       const existingBadge = zone.querySelector(".image-selected-badge");
-      if (existingBadge) {
-        existingBadge.remove();
-      }
+      if (existingBadge) existingBadge.remove();
 
       const badge = document.createElement("span");
       badge.className = "image-selected-badge";
@@ -144,17 +182,16 @@ document.addEventListener('DOMContentLoaded', function() {
     wireDropZone(zone, input, preview, arrayIndex);
   });
 
-  // Load user's storefronts for the dropdown
   if (storefrontSelect) {
     loadUserStorefronts();
   }
 
-  // Handle form submission
+  // ── Form submission ──────────────────────────────────────────
+
   if (listingForm) {
     listingForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // get real user from session - Updated by Day E 4/9/26
       const userRes = await fetch("/auth/api/auth/me");
       if (!userRes.ok) {
         alert("You must be logged in to create a listing.");
@@ -163,56 +200,75 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       const user = await userRes.json();
 
-      // Collect form data including file
       const storefrontId = document.getElementById("storefrontSelect").value;
       const listingName = document.getElementById("listingName").value.trim();
-      const count = parseInt(document.getElementById("count").value);
       const price = parseFloat(document.getElementById("price").value);
+      const isOneSizeMode = oneSizeToggle && oneSizeToggle.checked;
+      const isMadeToOrder = madeToOrderToggle && madeToOrderToggle.checked;
 
-      // Validate that a storefront is selected
       if (!storefrontId) {
         alert("Please select a storefront for this listing.");
         return;
       }
 
-      // Collect selected sizes
-      const sizeCheckboxes = document.querySelectorAll("input[name='sizes']:checked");
-      const sizes = Array.from(sizeCheckboxes).map((cb) => cb.value);
-
-      // Validate that at least one size is selected
-      if (sizes.length === 0) {
-        alert("Please select at least one size.");
+      if (!listingName || price < 0 || isNaN(price)) {
+        alert("Please fill in all required fields with valid values.");
         return;
       }
 
-      const listingImages = selectedListingImages.filter(Boolean);
+      // Collect sizes and per-size quantities
+      let sizes = [];
+      const sizeQuantities = {};
 
+      if (isOneSizeMode) {
+        const qty = parseInt(oneSizeQty ? oneSizeQty.value : "0", 10);
+        if (!isMadeToOrder && (isNaN(qty) || qty < 0)) {
+          alert("Please enter a valid quantity for One Size.");
+          return;
+        }
+        sizes = ["One Size"];
+        sizeQuantities["One Size"] = isMadeToOrder ? 0 : (qty || 0);
+      } else {
+        const sizeCheckboxes = document.querySelectorAll("input[name='sizes']:checked");
+        sizes = Array.from(sizeCheckboxes).map(cb => cb.value);
+        if (sizes.length === 0) {
+          alert("Please select at least one size.");
+          return;
+        }
+        for (const size of sizes) {
+          const qtyInput = multiSizeGrid
+            ? multiSizeGrid.querySelector(`.size-qty-input[data-size="${size}"]`)
+            : null;
+          const qty = qtyInput ? parseInt(qtyInput.value, 10) : NaN;
+          if (!isMadeToOrder && (isNaN(qty) || qty < 0)) {
+            alert(`Please enter a valid quantity for size ${size}.`);
+            return;
+          }
+          sizeQuantities[size] = isMadeToOrder ? 0 : (isNaN(qty) ? 0 : qty);
+        }
+      }
+
+      const totalQty = isMadeToOrder ? 0 : Object.values(sizeQuantities).reduce((a, b) => a + b, 0);
+
+      const listingImages = selectedListingImages.filter(Boolean);
       if (listingImages.length === 0) {
         alert("Please upload at least one listing image.");
         return;
       }
 
-      // Validate form data
-      if (!listingName || count < 1 || price < 0) {
-        alert("Please fill in all required fields with valid values.");
-        return;
-      }
-
       try {
-        // Create FormData object to handle file upload
         const formData = new FormData();
         formData.append("storefront_id", storefrontId);
         formData.append("title", listingName);
-        formData.append("quantity_on_hand", count);
+        formData.append("quantity_on_hand", totalQty);
         formData.append("price", price);
         formData.append("fulfillment_type", "IN_STOCK");
         formData.append("status", "ACTIVE");
-        listingImages.forEach((file) => {
-          formData.append("listing_images", file);
-        });
-        // Backward compatibility in case older backend code expects listing_image.
-        formData.append("listing_image", listingImages[0]);
+        formData.append("is_made_to_order", isMadeToOrder ? "true" : "false");
         formData.append("sizes_available", JSON.stringify(sizes));
+        formData.append("size_quantities", JSON.stringify(sizeQuantities));
+        listingImages.forEach(file => formData.append("listing_images", file));
+        formData.append("listing_image", listingImages[0]);
 
         const response = await fetch("/api/listings/create", {
           method: "POST",
@@ -240,18 +296,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Handle cancel button
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => {
       window.location.href = "/storefronts";
     });
   }
 
-  // Function to load user's storefronts
-  // Updated by Day E 4/9/26 - uses real session user instead of hardcoded ID
   async function loadUserStorefronts() {
     try {
-      // get real user from session
       const userRes = await fetch("/auth/api/auth/me");
       if (!userRes.ok) {
         window.location.href = "/auth/login";
@@ -275,11 +327,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ? [storefrontData]
             : [];
 
-        // Clear loading option
         storefrontSelect.innerHTML = "";
 
         if (storefronts.length > 0) {
-          // Add a default selection prompt
           const defaultOption = document.createElement("option");
           defaultOption.value = "";
           defaultOption.textContent = "Select a storefront";
@@ -287,37 +337,31 @@ document.addEventListener('DOMContentLoaded', function() {
           defaultOption.selected = true;
           storefrontSelect.appendChild(defaultOption);
 
-          storefronts.forEach((storefront) => {
+          storefronts.forEach(storefront => {
             const option = document.createElement("option");
             option.value = storefront.id;
             option.textContent = storefront.brand_name || storefront.name || `Storefront #${storefront.id}`;
             storefrontSelect.appendChild(option);
           });
         } else {
-          // user has no storefront — disable form and show message
           storefrontSelect.innerHTML = '<option value="" disabled>No storefronts found - create one first</option>';
-
           if (listingForm) {
             listingForm.querySelectorAll("input, select, button[type='submit']").forEach(el => {
               el.disabled = true;
             });
           }
-
           const messageDiv = document.createElement("div");
           messageDiv.style.cssText = "color: #d4af37; margin-top: 10px; font-weight: bold; text-align:center;";
           messageDiv.innerHTML = `You must create a storefront before creating listings. <a href="/storefronts/create" style="color:#fff; text-decoration:underline;">Create one here</a>`;
           storefrontSelect.parentNode.appendChild(messageDiv);
         }
       } else if (response.status === 404) {
-        // user has no storefront
         storefrontSelect.innerHTML = '<option value="" disabled>No storefronts found - create one first</option>';
-
         if (listingForm) {
           listingForm.querySelectorAll("input, select, button[type='submit']").forEach(el => {
             el.disabled = true;
           });
         }
-
         const messageDiv = document.createElement("div");
         messageDiv.style.cssText = "color: #d4af37; margin-top: 10px; font-weight: bold; text-align:center;";
         messageDiv.innerHTML = `You must create a storefront before creating listings. <a href="/storefronts/create" style="color:#fff; text-decoration:underline;">Create one here</a>`;

@@ -19,7 +19,9 @@ async function loadUsers() {
         const row = `
             <tr>
                 <td>${user.id}</td>
+                <td>${user.username || ""}</td>
                 <td>${user.email}</td>
+                <td>${user.role || "user"}</td>
                 <td>
                     <!-- Delete button calls deleteUser() -->
                     <button class="delete" onclick="deleteUser(${user.id})">Delete</button>
@@ -62,9 +64,10 @@ async function loadListings() {
             <tr>
                 <td>${listing.id}</td>
                 <td>${listing.title}</td>
+                <td>${listing.storefront_name || "Unknown"}</td>
+                <td>${listing.status || "ACTIVE"}</td>
                 <td>
-                    <!-- Delete listing button -->
-                    <button class="delete" onclick="deleteListing(${listing.id})">Delete</button>
+                    <button class="delete" onclick="deleteListing(${listing.id})">Soft Delete</button>
                 </td>
             </tr>
         `;
@@ -104,8 +107,63 @@ async function loadStorefronts() {
             <tr>
                 <td>${store.id}</td>
                 <td>${store.brand_name}</td>
+                <td>${store.is_active ? "Yes" : "No"}</td>
+                <td>${store.item_count ?? 0}</td>
+                <td>${store.categories || ""}</td>
             </tr>
         `;
         table.innerHTML += row;
     });
+}
+
+
+// RETURNS SECTION
+async function loadReturns() {
+    const response = await fetch('/admin/returns');
+    const returns = await response.json();
+
+    const table = document.querySelector('#returnsTable tbody');
+    table.innerHTML = "";
+
+    returns.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.username || ""}<br><small>${item.email || ""}</small></td>
+            <td>${item.order_number}</td>
+            <td>${item.has_damage ? "Yes" : "No"}</td>
+            <td>${item.damage_image_url ? `<a href="${item.damage_image_url}" target="_blank" rel="noopener">View</a>` : "—"}</td>
+            <td>
+                <select data-return-id="${item.id}">
+                    <option value="pending" ${item.status === "pending" ? "selected" : ""}>Pending</option>
+                    <option value="reviewed" ${item.status === "reviewed" ? "selected" : ""}>Reviewed</option>
+                    <option value="resolved" ${item.status === "resolved" ? "selected" : ""}>Resolved</option>
+                </select>
+                <button onclick="saveReturnStatus(${item.id})">Save</button>
+            </td>
+            <td>${item.reason}</td>
+        `;
+        table.appendChild(row);
+    });
+}
+
+async function saveReturnStatus(returnId) {
+    const select = document.querySelector(`select[data-return-id="${returnId}"]`);
+    if (!select) return;
+
+    const response = await fetch(`/admin/returns/${returnId}`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: select.value })
+    });
+
+    if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        alert(result.error || "Failed to update return status.");
+        return;
+    }
+
+    loadReturns();
 }

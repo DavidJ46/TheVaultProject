@@ -24,7 +24,8 @@ from services.storefront_service import (
     create_storefront_service,
     get_my_storefront_service,
     update_storefront_service,
-    deactivate_storefront_service
+    deactivate_storefront_service,
+    reactivate_storefront_service
 )
 
 from models.storefront_model import get_active_storefronts, get_storefront_by_id  # Updated by Day E 3/22/26
@@ -114,6 +115,11 @@ def get_storefront_by_id_route(storefront_id):
         storefront = get_storefront_by_id(storefront_id)
         if storefront is None:
             return jsonify({"error": "Storefront not found."}), 404
+        current_user = get_current_user()
+        is_owner = current_user is not None and storefront["owner_id"] == current_user["id"]
+        is_admin = current_user is not None and current_user.get("role") == "admin"
+        if storefront.get("is_active") is False and not is_owner and not is_admin:
+            return jsonify({"error": "Storefront not found."}), 404
         return jsonify(storefront), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -197,6 +203,26 @@ def deactivate_storefront_route(storefront_id):
             return jsonify({"error": str(e)}), 404
         return jsonify({"error": str(e)}), 400
 
+
+# Updated by Day E - April 22nd
+# PATCH /api/storefronts/<storefront_id>/reactivate
+@storefront_bp.patch("/<int:storefront_id>/reactivate")
+def reactivate_storefront_route(storefront_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return jsonify({"error": "Unauthorized: missing/invalid X-User-Id"}), 401
+
+    try:
+        updated = reactivate_storefront_service(current_user, storefront_id)
+        return jsonify(updated), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
 # Added by Day E 4/9/26 - My Storefront dashboard page
 @storefront_pages_bp.route("/storefronts/dashboard")
 def my_storefront_dashboard():
@@ -212,6 +238,14 @@ def edit_storefront_page(storefront_id):
     if not session.get("user"):
         return redirect(url_for("auth.login"))
     return render_template("edit_storefront.html", storefront_id=storefront_id)
+
+
+@storefront_pages_bp.route("/listings/<int:listing_id>/edit")
+def edit_listing_page(listing_id):
+    from flask import session, redirect, url_for
+    if not session.get("user"):
+        return redirect(url_for("auth.login"))
+    return render_template("edit_listing.html", listing_id=listing_id)
 
 # Added by Day E 4/16/26 - handles image uploads to S3 for storefront creation
 @storefront_bp.post("/upload-image")

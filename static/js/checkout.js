@@ -1,58 +1,127 @@
-/* checkout.js 
-    Developed by: Kaila
-    Purpose: Pulls cart data to display a dynamic order summary.
+/*
+    checkout.js
+    The Vault Campus Marketplace
+    CSC 405 Sp 26'
+    Updated by Day Ekoi - 4/22/26
+    - Reads cart from session via /auth/cart/json
+    - Displays items with size, qty, and subtotals
+    - Submits buyer details to /api/checkout/complete
+    - Redirects to order confirmation on success
 */
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Target the HTML elements we need to update
-    const itemsContainer = document.getElementById('checkoutItemsList');
-    const totalDisplay = document.querySelector('.total-amount'); 
-    
-    // Grab the cart data saved from the Storefront/Listing screens
-    // If no data exists, we default to an empty list []
-    const cartData = JSON.parse(localStorage.getItem('vaultCart')) || [];
+document.addEventListener("DOMContentLoaded", async () => {
+    const itemsList = document.getElementById("checkoutItemsList");
+    const totalDisplay = document.querySelector(".total-amount");
+    const submitBtn = document.getElementById("submitCheckoutBtn");
+    const errorMsg = document.getElementById("checkoutError");
 
-    // Logic to display items or a "Empty" message
-    if (cartData.length === 0) {
-        itemsContainer.innerHTML = '<p class="helper-text">Your bag is currently empty.</p>';
-        if(totalDisplay) totalDisplay.innerText = "$0.00";
-    } else {
-        itemsContainer.innerHTML = ''; // Clear the "No items selected" placeholder
-        let runningTotal = 0;
-
-        // Loop through each item in the cart array
-        cartData.forEach((item, index) => {
-            const itemRow = document.createElement('div');
-            itemRow.className = 'checkout-item-row';
-            
-            // Create the visual layout for the item name and price
-            itemRow.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 5px;">
-                    <span>${item.name}</span>
-                    <span class="gold">$${parseFloat(item.price).toFixed(2)}</span>
-                </div>
-            `;
-            
-            itemsContainer.appendChild(itemRow);
-            runningTotal += parseFloat(item.price);
-        });
-
-        // Update the final Total price
-        if(totalDisplay) {
-            totalDisplay.innerText = `$${runningTotal.toFixed(2)}`;
-        }
+    function showError(msg) {
+        if (!errorMsg) return;
+        errorMsg.textContent = msg;
+        errorMsg.style.display = "block";
+        errorMsg.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-});
 
-// Function to handle the "Complete Transaction" button
-document.getElementById('checkoutForm')?.addEventListener('submit', (e) => {
-    e.preventDefault(); // Prevents page from reloading instantly
-    
-    alert("Transaction Secured! The seller has been notified of your meeting location.");
-    
-    // Clear the cart after purchase so they don't buy it twice
-    localStorage.removeItem('vaultCart');
-    
-    // Redirect back to storefront or a thank you page
-    window.location.href = "/storefront"; 
+    function hideError() {
+        if (errorMsg) errorMsg.style.display = "none";
+    }
+
+    // Load cart from Flask session
+    let cart = [];
+    try {
+        const res = await fetch("/auth/cart/json");
+        if (res.ok) cart = await res.json();
+    } catch (e) {
+        console.error("Failed to load cart:", e);
+    }
+
+    if (!Array.isArray(cart) || cart.length === 0) {
+        if (itemsList) itemsList.innerHTML = '<p class="helper-text">Your bag is currently empty.</p>';
+        if (totalDisplay) totalDisplay.textContent = "$0.00";
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Cart is Empty";
+        }
+        return;
+    }
+
+    // Render cart items in order summary
+    let total = 0;
+    if (itemsList) {
+        itemsList.innerHTML = "";
+        cart.forEach((item) => {
+            const price = parseFloat(item.price || 0);
+            const qty = parseInt(item.quantity || 1, 10);
+            const subtotal = price * qty;
+            total += subtotal;
+
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid rgba(184,134,11,0.2); padding-bottom:8px;";
+            row.innerHTML = `
+                <div>
+                    <div style="font-weight:bold; color:#f0f0f0;">${item.name || "Item"}</div>
+                    <div style="color:#888; font-size:0.82rem; margin-top:2px;">
+                        ${item.size ? `Size: ${item.size} &nbsp;|&nbsp; ` : ""}Qty: ${qty}
+                    </div>
+                </div>
+                <span class="gold" style="white-space:nowrap; align-self:center;">$${subtotal.toFixed(2)}</span>
+            `;
+            itemsList.appendChild(row);
+        });
+    }
+
+    if (totalDisplay) totalDisplay.textContent = `$${total.toFixed(2)}`;
+
+    // Handle form submission
+    const form = document.getElementById("checkoutForm");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const firstName = (document.getElementById("firstName")?.value || "").trim();
+        const lastName = (document.getElementById("lastName")?.value || "").trim();
+        const email = (document.getElementById("buyerEmail")?.value || "").trim();
+        const contact = (document.getElementById("contactNumber")?.value || "").trim();
+        const meetingLocation = (document.getElementById("meetingLocation")?.value || "").trim();
+
+        if (!firstName || !lastName || !email || !contact || !meetingLocation) {
+            showError("All fields are required to complete your transaction.");
+            return;
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+        }
+
+        try {
+            const res = await fetch("/api/checkout/complete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    email,
+                    contact,
+                    meeting_location: meetingLocation,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Transaction failed.");
+            }
+
+            window.location.href = `/order-confirmation?conf=${encodeURIComponent(data.confirmation_number)}`;
+        } catch (err) {
+            showError(err.message || "Something went wrong. Please try again.");
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Complete Transaction";
+            }
+        }
+    });
 });

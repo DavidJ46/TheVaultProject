@@ -206,6 +206,23 @@ body {
     min-height: 240px;
 }
 
+.category-limit-copy {
+    margin-top: -8px;
+    margin-bottom: 16px;
+    text-align: center;
+    color: #d8d8d8;
+    font-size: 0.92rem;
+}
+
+.category-validation-message {
+    min-height: 20px;
+    margin-top: 1rem;
+    text-align: center;
+    color: #ff9b9b;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
 
 /* preview image section */
 .preview-card {
@@ -340,10 +357,22 @@ input[type="file"] {
     margin-top: 0.5rem;
 }
 
+.form-actions--split {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-actions-right {
+    display: flex;
+    gap: 1rem;
+}
+
 
 /* shared button styling */
 .primary-btn,
-.secondary-btn {
+.secondary-btn,
+.danger-btn,
+.reactivate-btn {
     min-width: 240px;
     border-radius: 2px;
     padding: 0.95rem 1.5rem;
@@ -371,10 +400,24 @@ input[type="file"] {
     border: 1px solid #d4af37;
 }
 
+.danger-btn {
+    background: rgba(132, 18, 18, 0.18);
+    color: #ff8f8f;
+    border: 1px solid rgba(220, 53, 53, 0.75);
+}
+
+.reactivate-btn {
+    background: rgba(24, 110, 54, 0.22);
+    color: #98efb2;
+    border: 1px solid rgba(76, 175, 80, 0.82);
+}
+
 
 /* hover */
 .primary-btn:hover,
-.secondary-btn:hover {
+.secondary-btn:hover,
+.danger-btn:hover,
+.reactivate-btn:hover {
     transform: translateY(-2px);
     opacity: 0.97;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
@@ -402,6 +445,12 @@ input[type="file"] {
         flex-direction: column;
         align-items: center;
         gap: 1.5rem;
+    }
+
+    .form-actions-right {
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
     }
 }
 

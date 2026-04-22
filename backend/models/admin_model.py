@@ -1,161 +1,90 @@
 # models/admin_model.py
-# File created by David Jackson
 
 """
-Admin Model
-
-This file contains all database-level operations related to admin actions.
-The model layer is responsible for executing SQL queries and returning data
-from the PostgreSQL database.
-
-Architecture Role:
-Controller → Service → Model → Database
-
-The model should ONLY handle database operations and should not contain
-business logic.
+Database queries used by the admin dashboard.
 """
 
-# Import the database connection function
 from db import get_connection
+from models.listing_model import soft_delete_listing
+from models.return_model import get_all_returns, update_return_status
+from models.storefront_model import get_all_storefronts
 
 
 def get_all_users():
-    """
-    Retrieves every user in the system.
-
-    Returns:
-        list: A list of user records from the database.
-              Each record contains:
-              - user_id
-              - username
-              - email
-              - created_at
-    """
-
-    # Establish connection to PostgreSQL
     conn = get_connection()
-
-    # Create cursor to execute SQL queries
     cur = conn.cursor()
 
-    # Execute SQL query
     cur.execute("""
-        SELECT user_id, username, email, created_at
+        SELECT id, username, email, role, created_at
         FROM users
         ORDER BY created_at DESC
     """)
 
-    # Fetch all results from the query
-    users = cur.fetchall()
-
-    # Close database resources
+    rows = cur.fetchall()
     cur.close()
     conn.close()
 
-    return users
+    return [
+        {
+            "id": row[0],
+            "username": row[1],
+            "email": row[2],
+            "role": row[3],
+            "created_at": row[4],
+        }
+        for row in rows
+    ]
 
 
 def delete_user(user_id):
-    """
-    Removes a user from the system.
-
-    Parameters:
-        user_id (int): The unique identifier for the user.
-
-    Behavior:
-        Permanently deletes the user record from the users table.
-    """
-
     conn = get_connection()
     cur = conn.cursor()
-
-    cur.execute("""
-        DELETE FROM users
-        WHERE user_id = %s
-    """, (user_id,))
-
-    # Commit the transaction to make the deletion permanent
+    cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
     conn.commit()
-
     cur.close()
     conn.close()
 
 
 def get_all_listings():
-    """
-    Retrieves every listing in the marketplace.
-
-    Returns:
-        list: Listing records including:
-              - listing_id
-              - title
-              - price
-              - status
-    """
-
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT listing_id, title, price, status
-        FROM listings
-        ORDER BY listing_id DESC
+        SELECT l.id, l.title, l.price, l.status, l.storefront_id, s.brand_name, l.updated_at
+        FROM listings l
+        LEFT JOIN storefronts s ON s.id = l.storefront_id
+        ORDER BY l.updated_at DESC, l.id DESC
     """)
 
-    listings = cur.fetchall()
-
+    rows = cur.fetchall()
     cur.close()
     conn.close()
 
-    return listings
+    return [
+        {
+            "id": row[0],
+            "title": row[1],
+            "price": float(row[2]),
+            "status": row[3],
+            "storefront_id": row[4],
+            "storefront_name": row[5],
+            "updated_at": row[6],
+        }
+        for row in rows
+    ]
 
 
 def delete_listing(listing_id):
-    """
-    Deletes a listing from the marketplace.
-
-    Parameters:
-        listing_id (int): Unique ID of the listing.
-
-    This allows admins to remove inappropriate or expired listings.
-    """
-
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        DELETE FROM listings
-        WHERE listing_id = %s
-    """, (listing_id,))
-
-    conn.commit()
-
-    cur.close()
-    conn.close()
+    return soft_delete_listing(listing_id)
 
 
-def get_all_storefronts():
-    """
-    Retrieves all storefronts created by users.
+def get_admin_storefronts():
+    return get_all_storefronts()
 
-    Returns:
-        list: Storefront records including:
-              - storefront_id
-              - name
-              - owner_user_id
-    """
 
-    conn = get_connection()
-    cur = conn.cursor()
+def get_admin_returns():
+    return get_all_returns(include_deleted=False)
 
-    cur.execute("""
-        SELECT storefront_id, name, owner_user_id
-        FROM storefronts
-    """)
 
-    stores = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return stores
+def update_admin_return_status(return_id, status):
+    return update_return_status(return_id, status)

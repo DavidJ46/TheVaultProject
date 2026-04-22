@@ -2,7 +2,7 @@
 # CSC 405 Sp 26'
 # Created by Day Ekoi - Iteration 5 - 4/21/26
 # Purpose: Integration test driver for all storefront features.
-#          Covers model layer (direct DB), schema constraints, service layer (business logic),
+#          Covers model layer (direct DB), schema constraints, service layer (rules, validation, permissions),
 #          and API routes (HTTP via Flask test client). Tests real database on AWS RDS.
 
 import sys
@@ -302,9 +302,9 @@ def run_model_tests(cur, conn, owner_id):
     # ----------------------------------------------------------
     subsection("TEST 1.13 — item_count: reflects active listing count via JOIN")
     cur.execute("""
-        INSERT INTO listings (storefront_id, title, price, fulfillment_type, status)
-        VALUES (%s, %s, %s, %s, %s) RETURNING id;
-    """, (storefront_id, "Test Listing Item", 25.00, "PICKUP", "ACTIVE"))
+        INSERT INTO listings (storefront_id, title, price, fulfillment_type, quantity_on_hand, status)
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
+    """, (storefront_id, "Test Listing Item", 25.00, "IN_STOCK", 10, "ACTIVE"))
     conn.commit()
     listing_id = cur.fetchone()[0]
 

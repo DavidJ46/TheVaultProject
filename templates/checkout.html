@@ -1,11 +1,8 @@
 <!--
 Created by Kaila Roberts 3/23/26
-
-This file contains the UI structure for the Checkout screen. 
-
+Updated by Day Ekoi 4/22/26 - wired to checkout.js, added field IDs, error display
 -->
 
-<!-- States the type of document being used-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,26 +28,27 @@ This file contains the UI structure for the Checkout screen.
     <main class="checkout-layout-wrapper">
         <section class="checkout-form-container form-card">
             <h3 class="section-label">Buyer Details</h3>
+            <div id="checkoutError" class="error-msg" style="display:none;"></div>
             <form id="checkoutForm">
                 <div class="input-group">
                     <label>First Name</label>
-                    <input type="text" placeholder="Enter First Name" required>
+                    <input type="text" id="firstName" placeholder="Enter First Name" required>
                 </div>
                 <div class="input-group">
                     <label>Last Name</label>
-                    <input type="text" placeholder="Enter Last Name" required>
+                    <input type="text" id="lastName" placeholder="Enter Last Name" required>
                 </div>
                 <div class="input-group">
                     <label>Campus Email</label>
-                    <input type="email" placeholder="student@campus.edu" required>
+                    <input type="email" id="buyerEmail" placeholder="student@campus.edu" required>
                 </div>
                 <div class="input-group">
                     <label>Contact Number</label>
-                    <textarea placeholder="e.g.(123)456-7890" required></textarea>
+                    <input type="text" id="contactNumber" placeholder="e.g. (123) 456-7890" required>
                 </div>
                 <div class="input-group">
                     <label>Meeting Location</label>
-                    <textarea placeholder="e.g. Student Center, 1st Floor" required></textarea>
+                    <textarea id="meetingLocation" placeholder="e.g. Student Center, 1st Floor" required></textarea>
                 </div>
             </form>
         </section>
@@ -58,14 +56,16 @@ This file contains the UI structure for the Checkout screen.
         <aside class="order-summary-container form-card">
             <h3 class="section-label">Review Order</h3>
             <div id="checkoutItemsList">
-                <p class="helper-text">Review your selection below.</p>
+                <p class="helper-text">Loading your bag...</p>
             </div>
             <div class="price-display">
                 <span class="gold">Total: </span>
                 <span class="total-amount">$0.00</span>
             </div>
-            <button type="submit" form="checkoutForm" class="primary-btn">Complete Transaction</button>
+            <button type="submit" id="submitCheckoutBtn" form="checkoutForm" class="primary-btn">Complete Transaction</button>
         </aside>
     </main>
+
+    <script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
 </body>
 </html>

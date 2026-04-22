@@ -11,10 +11,49 @@
 
 const form = document.getElementById("storefrontForm");
 const cancelBtn = document.getElementById("cancelBtn");
+const categoryCheckboxes = Array.from(document.querySelectorAll('input[name="categories"]'));
+const categoryValidationMessage = document.getElementById("categoryValidationMessage");
+const MAX_CATEGORY_SELECTIONS = 3;
 
 cancelBtn.addEventListener("click", () => {
     window.location.href = "/storefronts";
 });
+
+
+function getSelectedCategories() {
+    return categoryCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+}
+
+
+function showCategoryValidation(message = "") {
+    if (!categoryValidationMessage) return;
+    categoryValidationMessage.textContent = message;
+}
+
+
+function validateCategoryLimit() {
+    const selected = getSelectedCategories();
+    if (selected.length > MAX_CATEGORY_SELECTIONS) {
+        showCategoryValidation(`You can select up to ${MAX_CATEGORY_SELECTIONS} categories.`);
+        return false;
+    }
+    showCategoryValidation("");
+    return true;
+}
+
+
+function setupCategoryLimitGuard() {
+    categoryCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+            if (getSelectedCategories().length > MAX_CATEGORY_SELECTIONS) {
+                checkbox.checked = false;
+                showCategoryValidation(`You can select up to ${MAX_CATEGORY_SELECTIONS} categories.`);
+                return;
+            }
+            validateCategoryLimit();
+        });
+    });
+}
 
 
 // Guard: redirect away if user already has a storefront - Added by Day Ekoi 4/20/26
@@ -98,6 +137,7 @@ setupDropZone("previewZone1", "previewImage1", "previewPreview1", 1);
 setupDropZone("previewZone2", "previewImage2", "previewPreview2", 1);
 setupDropZone("previewZone3", "previewImage3", "previewPreview3", 1);
 setupDropZone("previewZone4", "previewImage4", "previewPreview4", 1);
+setupCategoryLimitGuard();
 
 
 // uploads a file to S3 via the Flask backend
@@ -163,6 +203,9 @@ form.addEventListener("submit", async (event) => {
         }
 
         const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
+        if (!validateCategoryLimit()) {
+            return;
+        }
 
         const payload = {
             brand_name: formData.get("brand_name"),

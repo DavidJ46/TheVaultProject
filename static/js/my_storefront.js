@@ -24,17 +24,33 @@ const bannerFallback = document.getElementById("bannerFallback");
 const logoImg = document.getElementById("logoImg");
 const logoFallback = document.getElementById("logoFallback");
 const listingGrid = document.getElementById("listingGrid");
+const storefrontStatusBanner = document.getElementById("storefrontStatusBanner");
 const editStorefrontBtn = document.getElementById("editStorefrontBtn");
 const createListingBtn = document.getElementById("createListingBtn");
 const viewStorefrontBtn = document.getElementById("viewStorefrontBtn");
 const deactivateStorefrontBtn = document.getElementById("deactivateStorefrontBtn");
 
 let storefrontId = null;
+let currentUser = null;
 
 
 // renders empty state in listing grid
 function renderEmpty(message) {
     listingGrid.innerHTML = `<p style="color:#888; font-style:italic; grid-column:1/-1; text-align:center;">${message}</p>`;
+}
+
+
+function closeListingMenus() {
+    document.querySelectorAll(".listing-menu-dropdown.active").forEach((menu) => {
+        menu.classList.remove("active");
+    });
+}
+
+
+function setButtonDisabledState(button, disabled) {
+    if (!button) return;
+    button.disabled = disabled;
+    button.classList.toggle("is-disabled", disabled);
 }
 
 
@@ -46,14 +62,107 @@ function createListingCard(item) {
     const title = item.title || item.name || "Untitled";
     const price = `$${Number(item.price || 0).toFixed(2)}`;
     const imageUrl = item.image_url || null;
+    const status = item.status || "ACTIVE";
+    const stateActionLabel = status === "DELETED"
+        ? "Restore Listing"
+        : (status === "INACTIVE" ? "Reactivate Listing" : "Deactivate Listing");
 
     card.innerHTML = `
-        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%; height:180px; object-fit:cover; border-radius:28px 28px 0 0;">` : `<div style="width:100%; height:180px; border-radius:28px 28px 0 0; background:#1a1a1a;"></div>`}
-        <div style="padding: 1rem;">
-            <p style="font-weight:700; color:#000;">${title}</p>
-            <p style="color:#B8860B; font-weight:700;">${price}</p>
+        ${imageUrl ? `<img class="listing-card-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-card-image listing-card-image--empty"></div>`}
+        <div class="listing-card-body">
+            <p class="listing-card-title">${title}</p>
+            <p class="listing-card-price">${price}</p>
+            <p class="listing-card-meta">Status: ${status}</p>
+            <div class="listing-menu-wrap">
+                <button type="button" class="listing-menu-trigger" aria-label="Open listing actions">...</button>
+                <div class="listing-menu-dropdown">
+                    <button type="button" class="listing-menu-item listing-menu-edit">Edit Listing</button>
+                    <button type="button" class="listing-menu-item listing-menu-toggle">${stateActionLabel}</button>
+                    <button type="button" class="listing-menu-item listing-menu-delete">Delete Listing</button>
+                </div>
+            </div>
         </div>
     `;
+
+    const trigger = card.querySelector(".listing-menu-trigger");
+    const dropdown = card.querySelector(".listing-menu-dropdown");
+    const editBtn = card.querySelector(".listing-menu-edit");
+    const toggleBtn = card.querySelector(".listing-menu-toggle");
+    const deleteBtn = card.querySelector(".listing-menu-delete");
+
+    trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isActive = dropdown.classList.contains("active");
+        closeListingMenus();
+        dropdown.classList.toggle("active", !isActive);
+    });
+
+    editBtn.addEventListener("click", () => {
+        if (status === "DELETED") return;
+        window.location.href = `/listings/${item.id}/edit`;
+    });
+
+    toggleBtn.addEventListener("click", async () => {
+        const endpoint = status === "DELETED"
+            ? "restore"
+            : (status === "INACTIVE" ? "reactivate" : "deactivate");
+        const actionLabel = status === "DELETED"
+            ? "restore"
+            : (status === "INACTIVE" ? "reactivate" : "deactivate");
+        const confirmed = window.confirm(`Are you sure you want to ${actionLabel} this listing?`);
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`/api/listings/${item.id}/${endpoint}`, {
+                method: "PATCH",
+                headers: {
+                    "X-User-Id": currentUser?.id || "",
+                    "X-User-Role": currentUser?.role || "user"
+                }
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.error || `Failed to ${actionLabel} listing.`);
+            }
+
+            await loadMyStorefront();
+        } catch (error) {
+            alert(error.message || `Unable to ${actionLabel} listing.`);
+        }
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+        if (status === "DELETED") return;
+        const confirmed = window.confirm("Are you sure you want to delete this listing?");
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`/api/listings/${item.id}`, {
+                method: "DELETE",
+                headers: {
+                    "X-User-Id": currentUser?.id || "",
+                    "X-User-Role": currentUser?.role || "user"
+                }
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to delete listing.");
+            }
+
+            await loadMyStorefront();
+        } catch (error) {
+            alert(error.message || "Unable to delete listing.");
+        }
+    });
+
+    if (status === "DELETED") {
+        editBtn.disabled = true;
+        deleteBtn.disabled = true;
+        editBtn.classList.add("is-disabled");
+        deleteBtn.classList.add("is-disabled");
+    }
 
     return card;
 }
@@ -69,6 +178,7 @@ async function loadMyStorefront() {
             return;
         }
         const user = await userRes.json();
+        currentUser = user;
 
         // get user's storefront
         const sfRes = await fetch("/api/storefronts/me", {
@@ -94,11 +204,15 @@ async function loadMyStorefront() {
 
         const storefront = await sfRes.json();
         storefrontId = storefront.id;
+        const storefrontIsActive = storefront.is_active !== false;
 
         // populate brand name, bio, contact info - Updated by Day Ekoi 4/20/26
         if (pageTitle) pageTitle.textContent = storefront.brand_name || "My Storefront";
         if (storefront.contact_info) contactInfo.textContent = storefront.contact_info;
         if (storefront.bio) storeDescription.textContent = storefront.bio;
+        if (storefrontStatusBanner) {
+            storefrontStatusBanner.style.display = storefrontIsActive ? "none" : "block";
+        }
 
         // populate banner
         if (storefront.banner_url) {
@@ -123,15 +237,17 @@ async function loadMyStorefront() {
         }
 
         if (viewStorefrontBtn) {
-            viewStorefrontBtn.onclick = () => {
-                window.location.href = `/storefronts/${storefrontId}`;
-            };
+            setButtonDisabledState(viewStorefrontBtn, !storefrontIsActive);
+            viewStorefrontBtn.onclick = storefrontIsActive
+                ? () => { window.location.href = `/storefronts/${storefrontId}`; }
+                : null;
         }
 
         if (createListingBtn) {
-            createListingBtn.onclick = () => {
-                window.location.href = "/listings/create";
-            };
+            setButtonDisabledState(createListingBtn, !storefrontIsActive);
+            createListingBtn.onclick = storefrontIsActive
+                ? () => { window.location.href = "/listings/create"; }
+                : null;
         }
 
         if (deactivateStorefrontBtn) {
@@ -164,7 +280,7 @@ async function loadMyStorefront() {
         }
 
         // fetch listings
-        const listRes = await fetch(`/api/storefronts/${storefrontId}/listings`, {
+        const listRes = await fetch(`/api/listings/my?include_deleted=1`, {
             headers: {
                 "X-User-Id": user.id,
                 "X-User-Role": user.role
@@ -177,15 +293,15 @@ async function loadMyStorefront() {
         }
 
         const listings = await listRes.json();
-        const active = listings.filter(l => l.status !== "DELETED" && l.status !== "INACTIVE");
+        const visibleListings = Array.isArray(listings) ? listings : [];
 
         listingGrid.innerHTML = "";
-        if (!active.length) {
+        if (!visibleListings.length) {
             renderEmpty("No listings yet. Create your first listing!");
             return;
         }
 
-        active.forEach(item => listingGrid.appendChild(createListingCard(item)));
+        visibleListings.forEach(item => listingGrid.appendChild(createListingCard(item)));
 
     } catch (error) {
         console.error("Error loading my storefront:", error);
@@ -197,3 +313,7 @@ async function loadMyStorefront() {
 
 // run on page load
 loadMyStorefront();
+
+document.addEventListener("click", () => {
+    closeListingMenus();
+});

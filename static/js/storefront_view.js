@@ -1,38 +1,47 @@
 /*
     storefront_view.js
 
-    The Vault Campus Marketplace 
+    The Vault Campus Marketplace
     CSC 405 Sp 26'
     Created by Day Ekoi - Iteration 4
     3/22/2026
     Updated by Day Ekoi - Iteration 5 4/9/26
     Updated by Day Ekoi - Iteration 5 - 4/20/26 - fixed wishlistIds undefined crash and isWishlisted undefined in createListingCard
+    Updated by Day E - April 22nd - multi-image listing display, lightbox preview, and contain-based image handling
 
 Description:
 This file handles the functionality for the public storefront view page.
 Fetches real storefront and listing data from the Flask API using the
 storefront ID from the URL. Renders storefront banner, logo, description,
-and listing cards dynamically. If the logged in user owns the storefront,
-an edit button is shown.
+and listing cards dynamically.
 
 Works with:
 - storefront_view.html
 - storefront_view.css
 */
 
-
-// get storefront ID from the URL (e.g. /storefronts/3 → 3)
 const storefrontId = window.location.pathname.split("/").pop();
 const AUTH_ME_ENDPOINT = "/auth/api/auth/me";
+const LISTING_IMAGE_FALLBACK = "/static/images/placeholder-storefront.png";
 
-// get references to page elements
 const pageTitle = document.getElementById("pageTitle");
 const contactInfo = document.getElementById("contactInfo");
 const storeDescription = document.getElementById("storeDescription");
 const storefrontLogo = document.getElementById("storefrontLogo");
 const logoFallback = document.getElementById("logoFallback");
 const listingGrid = document.getElementById("listingGrid");
+const lightbox = document.getElementById("listingLightbox");
+const lightboxImage = document.getElementById("lightboxImage");
+const lightboxDots = document.getElementById("lightboxDots");
+const lightboxClose = document.getElementById("lightboxClose");
+const lightboxPrev = document.getElementById("lightboxPrev");
+const lightboxNext = document.getElementById("lightboxNext");
 
+const listingImagesCache = new Map();
+const lightboxState = {
+    images: [],
+    index: 0
+};
 
 function ensureToastRoot() {
     let root = document.getElementById("cartToastRoot");
@@ -44,7 +53,6 @@ function ensureToastRoot() {
     }
     return root;
 }
-
 
 function showCartToast(message, tone = "success") {
     const root = ensureToastRoot();
@@ -59,7 +67,6 @@ function showCartToast(message, tone = "success") {
     }, 2200);
 }
 
-
 function toNumericPrice(priceValue) {
     if (typeof priceValue === "number") return priceValue;
     if (typeof priceValue === "string") {
@@ -69,7 +76,6 @@ function toNumericPrice(priceValue) {
     }
     return 0;
 }
-
 
 function parseSizesFromListing(item) {
     const source = item.sizes_available;
@@ -94,7 +100,6 @@ function parseSizesFromListing(item) {
 
     return [];
 }
-
 
 async function getListingSizeOptions(listingId, item) {
     const inlineSizes = parseSizesFromListing(item);
@@ -122,6 +127,37 @@ async function getListingSizeOptions(listingId, item) {
     }
 }
 
+async function fetchListingImages(listingId, fallbackImageUrl) {
+    if (listingImagesCache.has(listingId)) {
+        return listingImagesCache.get(listingId);
+    }
+
+    try {
+        const response = await fetch(`/api/listings/${listingId}/images`);
+        if (!response.ok) {
+            throw new Error("Unable to load listing images.");
+        }
+
+        const images = await response.json();
+        const normalized = Array.isArray(images)
+            ? images
+                .map((image) => String(image.image_url || "").trim())
+                .filter(Boolean)
+                .slice(0, 4)
+            : [];
+
+        if (normalized.length > 0) {
+            listingImagesCache.set(listingId, normalized);
+            return normalized;
+        }
+    } catch (error) {
+        console.error(`Unable to load images for listing ${listingId}:`, error);
+    }
+
+    const fallback = [fallbackImageUrl || LISTING_IMAGE_FALLBACK];
+    listingImagesCache.set(listingId, fallback);
+    return fallback;
+}
 
 function getLocalWishlistItems() {
     try {
@@ -132,7 +168,6 @@ function getLocalWishlistItems() {
         return [];
     }
 }
-
 
 function setLocalWishlistItems(items) {
     const normalized = items.map((item) => ({
@@ -146,7 +181,6 @@ function setLocalWishlistItems(items) {
     localStorage.setItem("vaultWishlistLocalItems", JSON.stringify(normalized));
     localStorage.setItem("vaultWishlistListingIds", JSON.stringify(normalized.map((item) => String(item.listing_id))));
 }
-
 
 function addLocalWishlistItem(item) {
     const items = getLocalWishlistItems();
@@ -162,12 +196,10 @@ function addLocalWishlistItem(item) {
     setLocalWishlistItems(filtered);
 }
 
-
 function removeLocalWishlistItem(listingId) {
     const updated = getLocalWishlistItems().filter((item) => String(item.listing_id || item.id) !== String(listingId));
     setLocalWishlistItems(updated);
 }
-
 
 async function getCurrentSessionUser() {
     try {
@@ -185,7 +217,6 @@ async function getCurrentSessionUser() {
         return null;
     }
 }
-
 
 async function getWishlistIdSet(userId) {
     if (!userId) {
@@ -214,14 +245,132 @@ async function getWishlistIdSet(userId) {
     }
 }
 
-
-// renders an empty state message in the listing grid
 function renderEmpty(message) {
     listingGrid.innerHTML = `<p style="color:#c9c9c9; font-style:italic; text-align:center; grid-column: 1/-1;">${message}</p>`;
 }
 
+function updateDots(container, images, activeIndex, dotClassName, onSelect) {
+    if (!container) return;
 
-// builds and returns a single listing card element
+    container.innerHTML = "";
+    if (!Array.isArray(images) || images.length <= 1) {
+        return;
+    }
+
+    images.forEach((_image, index) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = `${dotClassName} ${index === activeIndex ? "active" : ""}`;
+        dot.setAttribute("aria-label", `Go to image ${index + 1}`);
+        dot.addEventListener("click", () => onSelect(index));
+        container.appendChild(dot);
+    });
+}
+
+function renderLightbox() {
+    if (!lightbox || !lightboxImage) return;
+
+    const { images, index } = lightboxState;
+    if (!images.length) return;
+
+    lightboxImage.src = images[index];
+    lightboxImage.alt = `Listing image ${index + 1}`;
+    updateDots(lightboxDots, images, index, "lightbox-dot", (nextIndex) => {
+        lightboxState.index = nextIndex;
+        renderLightbox();
+    });
+
+    if (lightboxPrev) {
+        lightboxPrev.style.display = images.length > 1 ? "inline-flex" : "none";
+    }
+    if (lightboxNext) {
+        lightboxNext.style.display = images.length > 1 ? "inline-flex" : "none";
+    }
+}
+
+function openLightbox(images, startIndex = 0) {
+    if (!lightbox || !Array.isArray(images) || !images.length) return;
+    lightboxState.images = images;
+    lightboxState.index = startIndex;
+    renderLightbox();
+    lightbox.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove("is-open");
+    document.body.style.overflow = "";
+}
+
+function shiftLightbox(step) {
+    if (!lightboxState.images.length) return;
+    lightboxState.index = (lightboxState.index + step + lightboxState.images.length) % lightboxState.images.length;
+    renderLightbox();
+}
+
+function createListingImageCarousel(images, title) {
+    const shell = document.createElement("div");
+    shell.className = "listing-image-shell";
+
+    const image = document.createElement("img");
+    image.className = "listing-image";
+    image.alt = title;
+
+    const dots = document.createElement("div");
+    dots.className = "listing-image-dots";
+
+    const counter = document.createElement("div");
+    counter.className = "listing-image-counter";
+
+    let currentIndex = 0;
+
+    const render = () => {
+        image.src = images[currentIndex];
+        counter.textContent = `${currentIndex + 1}/${images.length}`;
+        updateDots(dots, images, currentIndex, "listing-image-dot", (nextIndex) => {
+            currentIndex = nextIndex;
+            render();
+        });
+    };
+
+    image.addEventListener("click", () => openLightbox(images, currentIndex));
+    shell.classList.add("is-clickable");
+    shell.appendChild(image);
+
+    if (images.length > 1) {
+        const prevBtn = document.createElement("button");
+        prevBtn.type = "button";
+        prevBtn.className = "listing-image-nav listing-image-nav--left";
+        prevBtn.setAttribute("aria-label", "Previous image");
+        prevBtn.innerHTML = "&#10094;";
+        prevBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            render();
+        });
+
+        const nextBtn = document.createElement("button");
+        nextBtn.type = "button";
+        nextBtn.className = "listing-image-nav listing-image-nav--right";
+        nextBtn.setAttribute("aria-label", "Next image");
+        nextBtn.innerHTML = "&#10095;";
+        nextBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            currentIndex = (currentIndex + 1) % images.length;
+            render();
+        });
+
+        shell.appendChild(prevBtn);
+        shell.appendChild(nextBtn);
+        shell.appendChild(dots);
+        shell.appendChild(counter);
+    }
+
+    render();
+    return { shell, getPrimaryImage: () => images[0] || LISTING_IMAGE_FALLBACK };
+}
+
 async function createListingCard(item, wishlistIds, currentUserId) {
     const card = document.createElement("div");
     card.className = "listing-card";
@@ -232,25 +381,52 @@ async function createListingCard(item, wishlistIds, currentUserId) {
     const price = typeof item.price === "string" && item.price.includes("$")
         ? item.price
         : `$${numericPrice.toFixed(2)}`;
-    const imageUrl = item.image_url || "/static/images/placeholder-storefront.png";
+    const images = await fetchListingImages(listingId, item.image_url);
+    const primaryImageUrl = images[0] || item.image_url || LISTING_IMAGE_FALLBACK;
     const isWishlisted = wishlistIds.has(String(listingId));
     const sizeOptions = await getListingSizeOptions(listingId, item);
     const hasSizes = sizeOptions.length > 0;
+    const isOneSizeItem = hasSizes && sizeOptions.length === 1 && sizeOptions[0] === "One Size";
+    const isMadeToOrder = Boolean(item.is_made_to_order);
+    const maxQuantity = isMadeToOrder ? 999 : (item.quantity_on_hand || 1);
 
-    const sizeOptionsMarkup = hasSizes
-        ? sizeOptions
+    let sizeFieldMarkup;
+    if (isOneSizeItem) {
+        sizeFieldMarkup = `
+            <label class="field-label">Size</label>
+            <span class="one-size-label" style="color:#d4af37;font-weight:600;padding:0.2rem 0;">One Size</span>
+        `;
+    } else if (hasSizes) {
+        const sizeOptionsMarkup = sizeOptions
             .map((size, index) => `<option value="${size}" ${index === 0 ? "selected" : ""}>${size}</option>`)
-            .join("")
-        : `<option value="" selected disabled>No sizes available</option>`;
+            .join("");
+        sizeFieldMarkup = `
+            <label class="field-label" for="sizeSelect-${listingId}">Size</label>
+            <select id="sizeSelect-${listingId}" class="size-select">${sizeOptionsMarkup}</select>
+        `;
+    } else {
+        sizeFieldMarkup = `
+            <label class="field-label">Size</label>
+            <select class="size-select" disabled><option value="" disabled selected>No sizes available</option></select>
+        `;
+    }
 
-    const maxQuantity = item.quantity_on_hand || 1;
+    const madeToOrderBadge = isMadeToOrder
+        ? `<span class="made-to-order-badge" style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;padding:0.15rem 0.45rem;border-radius:999px;text-transform:uppercase;margin-top:2px;">Made to Order</span>`
+        : "";
+
+    const descriptionMarkup = item.description
+        ? `<p class="listing-description">${item.description}</p>`
+        : "";
+
+    const carousel = createListingImageCarousel(images, title);
 
     card.innerHTML = `
-        ${imageUrl ? `<img class="listing-image" src="${imageUrl}" alt="${title}">` : `<div class="listing-image"></div>`}
         <div class="listing-info">
             <div class="listing-copy">
                 <span class="item-name">${title}</span>
                 <span class="item-price">${price}</span>
+                ${madeToOrderBadge}
             </div>
             <div class="listing-actions">
                 <button class="wishlist-lock-btn ${isWishlisted ? "active" : ""}" type="button" aria-label="${isWishlisted ? "Remove from wishlist" : "Add to wishlist"}" title="${isWishlisted ? "Remove from wishlist" : "Add to wishlist"}">
@@ -262,18 +438,18 @@ async function createListingCard(item, wishlistIds, currentUserId) {
                 </button>
             </div>
         </div>
+        ${descriptionMarkup}
         <div class="purchase-panel">
             <div class="purchase-fields">
-                <label class="field-label" for="sizeSelect-${listingId}">Size</label>
-                <select id="sizeSelect-${listingId}" class="size-select" ${hasSizes ? "" : "disabled"}>
-                    ${sizeOptionsMarkup}
-                </select>
+                ${sizeFieldMarkup}
                 <label class="field-label" for="countInput-${listingId}">Count</label>
                 <input id="countInput-${listingId}" class="count-input" type="number" min="1" max="${maxQuantity}" step="1" value="1" inputmode="numeric">
             </div>
             <button type="button" class="add-to-cart-btn" ${hasSizes ? "" : "disabled"}>Add to Cart</button>
         </div>
     `;
+
+    card.prepend(carousel.shell);
 
     const wishlistBtn = card.querySelector(".wishlist-lock-btn");
     wishlistBtn.addEventListener("click", async () => {
@@ -312,7 +488,7 @@ async function createListingCard(item, wishlistIds, currentUserId) {
                     listing_id: listingId,
                     title,
                     price,
-                    image_url: imageUrl,
+                    image_url: primaryImageUrl,
                     storefront_name: pageTitle?.textContent || "Storefront"
                 });
             } else {
@@ -338,9 +514,9 @@ async function createListingCard(item, wishlistIds, currentUserId) {
             return;
         }
 
-        const selectedSize = sizeSelect.value;
+        const selectedSize = isOneSizeItem ? "One Size" : (sizeSelect ? sizeSelect.value : "");
         const selectedCount = Number.parseInt(countInput.value, 10);
-        const maxQuantity = item.quantity_on_hand || 1;
+        const effectiveMax = isMadeToOrder ? Number.POSITIVE_INFINITY : (item.quantity_on_hand || 1);
 
         if (!selectedSize) {
             showCartToast("Please select a size.", "error");
@@ -353,9 +529,9 @@ async function createListingCard(item, wishlistIds, currentUserId) {
             return;
         }
 
-        if (selectedCount > maxQuantity) {
-            showCartToast(`Maximum available quantity is ${maxQuantity}.`, "error");
-            countInput.value = String(maxQuantity);
+        if (!isMadeToOrder && selectedCount > effectiveMax) {
+            showCartToast(`Maximum available quantity is ${effectiveMax}.`, "error");
+            countInput.value = String(effectiveMax);
             return;
         }
 
@@ -391,49 +567,47 @@ async function createListingCard(item, wishlistIds, currentUserId) {
     return card;
 }
 
-
-// fetches storefront data and listings from the API and renders the page
 async function loadStorefrontView() {
+    let storefront;
     try {
-        // fetch storefront info
         const sfRes = await fetch(`/api/storefronts/${storefrontId}`);
         if (!sfRes.ok) throw new Error("Storefront not found");
-        const storefront = await sfRes.json();
+        storefront = await sfRes.json();
+    } catch (error) {
+        console.error("Error loading storefront:", error);
+        if (pageTitle) pageTitle.textContent = "Storefront Unavailable";
+        storeDescription.textContent = "Could not load storefront details. Please try again.";
+        renderEmpty("Could not load listings.");
+        return;
+    }
 
-        // populate banner
-        if (pageTitle) pageTitle.textContent = storefront.brand_name || "Unnamed Storefront";
-        contactInfo.textContent = storefront.contact_info || "";
-        storeDescription.textContent = storefront.bio || storefront.description || "No description provided.";
+    if (pageTitle) pageTitle.textContent = storefront.brand_name || "Unnamed Storefront";
+    storeDescription.textContent = storefront.bio || storefront.description || "No description provided.";
+    contactInfo.textContent = storefront.contact_info || "";
 
-        // populate logo
-        if (storefront.logo_url) {
-            storefrontLogo.src = storefront.logo_url;
-            storefrontLogo.style.display = "block";
-            logoFallback.style.display = "none";
-        }
+    if (storefront.logo_url) {
+        storefrontLogo.src = storefront.logo_url;
+        storefrontLogo.style.display = "block";
+        logoFallback.style.display = "none";
+    }
 
-        // populate banner image if available
-        if (storefront.banner_url) {
-            document.getElementById("storefrontBanner").style.backgroundImage = `url('${storefront.banner_url}')`;
-            document.getElementById("storefrontBanner").style.backgroundSize = "cover";
-            document.getElementById("storefrontBanner").style.backgroundPosition = "center";
-        }
+    if (storefront.banner_url) {
+        document.getElementById("storefrontBanner").style.backgroundImage = `url('${storefront.banner_url}')`;
+        document.getElementById("storefrontBanner").style.backgroundSize = "cover";
+        document.getElementById("storefrontBanner").style.backgroundPosition = "center";
+    }
 
-        // get session user and wishlist (both optional — page works for logged-out users too)
-        const sessionUser = await getCurrentSessionUser();
-        const wishlistIds = await getWishlistIdSet(sessionUser?.id || null);
+    const sessionUser = await getCurrentSessionUser();
+    const wishlistIds = await getWishlistIdSet(sessionUser?.id || null);
 
-        // Removed by Day Ekoi - Iteration 5 - 4/20/26: public storefront view no longer injects an edit button into the banner.
-
-        // fetch listings for this storefront
+    try {
         const listRes = await fetch(`/api/storefronts/${storefrontId}/listings`);
         if (!listRes.ok) throw new Error("Could not load listings");
         const listings = await listRes.json();
 
-        // render listings
         listingGrid.innerHTML = "";
         const activeListings = Array.isArray(listings)
-            ? listings.filter(item => item.status !== "DELETED" && item.status !== "INACTIVE")
+            ? listings.filter((item) => item.status !== "DELETED" && item.status !== "INACTIVE")
             : [];
 
         if (!activeListings.length) {
@@ -444,128 +618,42 @@ async function loadStorefrontView() {
         const cards = await Promise.all(
             activeListings.map((item) => createListingCard(item, wishlistIds, sessionUser?.id || null))
         );
-
-        cards.forEach((card) => {
-            listingGrid.appendChild(card);
-        });
-
+        cards.forEach((card) => listingGrid.appendChild(card));
     } catch (error) {
-        console.error("Error loading storefront view:", error);
-        if (pageTitle) pageTitle.textContent = "Storefront Unavailable";
-        storeDescription.textContent = "Could not load storefront details. Please try again.";
-        renderEmpty("Could not load listings.");
+        console.error("Error loading listings:", error);
+        renderEmpty("Could not load listings. Please try again.");
     }
 }
 
+if (lightboxClose) {
+    lightboxClose.addEventListener("click", closeLightbox);
+}
 
-// run on page load
-loadStorefrontView();
+if (lightboxPrev) {
+    lightboxPrev.addEventListener("click", () => shiftLightbox(-1));
+}
 
-/*
-    storefront_view.js
+if (lightboxNext) {
+    lightboxNext.addEventListener("click", () => shiftLightbox(1));
+}
 
-    The Vault Campus Marketplace 
-    CSC 405 Sp 26'
-    Created by Day Ekoi - Iteration 4
-    3/22/2026
-
-
-Description:
-This file handles the functionality for the public storefront view page.
-It creates listing cards dynamically and handles basic interactions such as
-going back to the storefront homepage.
-
-Later, this file will pull real listing data from the backend and render
-the correct storefront information dynamically.
- 
-
-
-// test listing data: placeholder data for layout testing
-const listings = [
-    { id: 1, name: "Nike Jacket", price: "$186.80" },
-    { id: 2, name: "Onyx Diamond Hoodie", price: "$165.00" },
-    { id: 3, name: "Essential Hoodie", price: "$120.00" },
-    { id: 4, name: "Streetwear Tee", price: "$48.00" }
-];
-
-
-// get references: main elements on the page
-const listingGrid = document.getElementById("listingGrid");
-const backBtn = document.getElementById("backBtn");
-
-
-// render listings: dynamically creates listing cards
-function renderListings() {
-    listingGrid.innerHTML = "";
-
-        const selectedIds = getWishlistIdSet();
-
-        const activeListings = listings.filter((item) => item.status !== "DELETED");
-
-        if (!activeListings.length) {
-            renderEmpty("No listings available for this storefront yet.");
-            return;
+if (lightbox) {
+    lightbox.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+            closeLightbox();
         }
+    });
+}
 
-        activeListings.forEach((item, index) => {
-            const card = document.createElement("div");
-            card.className = "listing-card";
-
-            const title = item.title || item.name || "Untitled Listing";
-            const priceValue =
-                typeof item.price === "string" && item.price.includes("$")
-                    ? item.price
-                    : `$${Number(item.price || 0).toFixed(2)}`;
-
-            const imageUrl =
-                item.image_url ||
-                (Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : null) ||
-                getMockListingImage(storefrontId, index);
-
-        card.innerHTML = `
-            <div class="listing-image"></div>
-            <div class="listing-info">
-                <span class="item-name">${item.name}</span>
-                <span class="item-price">${item.price}</span>
-
-                <button class="cart-btn" aria-label="Add to cart">
-                    <svg viewBox="0 0 24 24" class="cart-svg">
-                        <!-- bag -->
-                        <path
-                            d="M6 8h12l-1 11H7L6 8Z"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="M9 8V6a3 3 0 0 1 6 0v2"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-
-                        <!-- plus sign -->
-                        <line x1="18" y1="5" x2="18" y2="11" stroke="currentColor" stroke-width="2"/>
-                        <line x1="15" y1="8" x2="21" y2="8" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                </button>
-            </div>
-        `;
-
-            listingGrid.appendChild(card);
-        });
+document.addEventListener("keydown", (event) => {
+    if (!lightbox || !lightbox.classList.contains("is-open")) return;
+    if (event.key === "Escape") {
+        closeLightbox();
+    } else if (event.key === "ArrowLeft") {
+        shiftLightbox(-1);
+    } else if (event.key === "ArrowRight") {
+        shiftLightbox(1);
     }
-
-
-// back button: returns user to storefront homepage
-backBtn.addEventListener("click", () => {
-    window.location.href = "/storefronts";
 });
 
-
-// initial render
-renderListings();
-*/
-
+loadStorefrontView();

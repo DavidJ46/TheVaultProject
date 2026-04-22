@@ -67,7 +67,10 @@ def get_wishlist_by_user_id(user_id):
     query = """
         SELECT w.id, w.user_id, w.listing_id, w.added_date,
                l.title, l.description, l.price, l.fulfillment_type, l.status,
-               s.brand_name, s.logo_url
+               s.brand_name, s.logo_url,
+               (SELECT li.image_url FROM listing_images li
+                WHERE li.listing_id = l.id AND li.is_primary = TRUE
+                LIMIT 1) AS image_url
         FROM wishlist w
         JOIN listings l ON w.listing_id = l.id
         JOIN storefronts s ON l.storefront_id = s.id
@@ -94,6 +97,7 @@ def get_wishlist_by_user_id(user_id):
                 "price": float(row[6]),
                 "fulfillment_type": row[7],
                 "status": row[8],
+                "image_url": row[11],
             },
             "storefront": {
                 "brand_name": row[9],

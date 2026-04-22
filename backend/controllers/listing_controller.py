@@ -25,8 +25,12 @@ from services.listing_service import (
     create_listing_service,
     get_listing_by_id_service,
     get_listings_for_storefront_service,
+    get_listings_for_storefront_with_options_service,
     update_listing_service,
     delete_listing_service,
+    deactivate_listing_service,
+    reactivate_listing_service,
+    restore_deleted_listing_service,
     # listing images services (merged into listing_service.py)
     add_listing_image_service,
     get_listing_images_service,
@@ -98,11 +102,12 @@ def create_listing_from_form():
         # Get form fields
         title = request.form.get("title", "").strip()
         storefront_id = user_storefront["id"]
-        quantity_on_hand = request.form.get("quantity_on_hand", type=int)
         price = request.form.get("price", type=float)
         fulfillment_type = request.form.get("fulfillment_type", "IN_STOCK").strip()
         status = request.form.get("status", "ACTIVE").strip()
         sizes_json = request.form.get("sizes_available", "[]")
+        size_quantities_json = request.form.get("size_quantities", "{}")
+        is_made_to_order = request.form.get("is_made_to_order", "false").lower() in ("true", "1", "yes")
 
         # Validate required fields
         if not title:
@@ -116,6 +121,22 @@ def create_listing_from_form():
         except json.JSONDecodeError:
             return jsonify({"error": "Invalid sizes_available format."}), 400
 
+        # Parse per-size quantities (maps size name → quantity)
+        try:
+            size_quantities = json.loads(size_quantities_json) if size_quantities_json else {}
+            if not isinstance(size_quantities, dict):
+                size_quantities = {}
+        except json.JSONDecodeError:
+            size_quantities = {}
+
+        # Calculate total quantity as sum of all size quantities
+        quantity_on_hand = request.form.get("quantity_on_hand", type=int)
+        if size_quantities:
+            calculated_total = sum(int(v) for v in size_quantities.values() if str(v).isdigit() or isinstance(v, int))
+            quantity_on_hand = calculated_total if calculated_total > 0 else (quantity_on_hand or 0)
+        elif quantity_on_hand is None:
+            quantity_on_hand = 0
+
         # Handle file upload(s) - supports multiple images, first one is primary.
         upload_files = request.files.getlist("listing_images")
         upload_files = [f for f in upload_files if f and f.filename]
@@ -126,6 +147,8 @@ def create_listing_from_form():
 
         if not upload_files:
             return jsonify({"error": "At least one listing image is required."}), 400
+        if len(upload_files) > 4:
+            return jsonify({"error": "You can upload up to 4 listing images."}), 400
 
         image_urls = []
         try:
@@ -149,7 +172,9 @@ def create_listing_from_form():
             "price": price,
             "fulfillment_type": fulfillment_type,
             "status": status,
-            "description": ""  # Can be added later
+            "description": "",
+            "sizes_available": sizes_available,
+            "is_made_to_order": is_made_to_order,
         }
 
         # Create listing
@@ -160,14 +185,18 @@ def create_listing_from_form():
             try:
                 add_listing_image_service(current_user, listing["id"], image_url, is_primary=(index == 0))
             except Exception as e:
-                # Log but don't fail - listing was created
                 print(f"Warning: Failed to add image to listing: {str(e)}")
 
-        # Add sizes to listing
+        # Add sizes with individual quantities
         for size in sizes_available:
             try:
-                size_quantity = quantity_on_hand
-                upsert_listing_size_service(current_user, listing["id"], size, size_quantity)
+                # Use per-size quantity if provided, else fall back to total
+                size_qty = size_quantities.get(size, quantity_on_hand) if size_quantities else quantity_on_hand
+                try:
+                    size_qty = int(size_qty)
+                except (TypeError, ValueError):
+                    size_qty = quantity_on_hand or 0
+                upsert_listing_size_service(current_user, listing["id"], size, size_qty)
             except Exception as e:
                 print(f"Warning: Failed to add size {size} to listing: {str(e)}")
 
@@ -241,7 +270,11 @@ def get_my_listings_route():
         if user_storefront is None:
             return jsonify([]), 200
 
-        listings = get_listings_for_storefront_service(user_storefront["id"])
+        include_deleted = request.args.get("include_deleted", "0").lower() in {"1", "true", "yes"}
+        listings = get_listings_for_storefront_with_options_service(
+            user_storefront["id"],
+            include_deleted=include_deleted
+        )
         return jsonify(listings), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -303,6 +336,66 @@ def delete_listing_route(listing_id):
     try:
         deleted = delete_listing_service(current_user, listing_id)
         return jsonify(deleted), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Updated by Day E - April 22nd
+# PATCH /api/listings/<listing_id>/deactivate
+@listing_bp.patch("/listings/<int:listing_id>/deactivate")
+def deactivate_listing_route(listing_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return jsonify({"error": "Unauthorized: missing/invalid X-User-Id"}), 401
+
+    try:
+        updated = deactivate_listing_service(current_user, listing_id)
+        return jsonify(updated), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Updated by Day E - April 22nd
+# PATCH /api/listings/<listing_id>/reactivate
+@listing_bp.patch("/listings/<int:listing_id>/reactivate")
+def reactivate_listing_route(listing_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return jsonify({"error": "Unauthorized: missing/invalid X-User-Id"}), 401
+
+    try:
+        updated = reactivate_listing_service(current_user, listing_id)
+        return jsonify(updated), 200
+    except Exception as e:
+        msg = str(e).lower()
+        if "unauthorized" in msg:
+            return jsonify({"error": str(e)}), 403
+        if "not found" in msg:
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+
+# Updated by Day E - April 22nd
+# PATCH /api/listings/<listing_id>/restore
+@listing_bp.patch("/listings/<int:listing_id>/restore")
+def restore_deleted_listing_route(listing_id):
+    current_user = get_current_user()
+    if current_user is None:
+        return jsonify({"error": "Unauthorized: missing/invalid X-User-Id"}), 401
+
+    try:
+        updated = restore_deleted_listing_service(current_user, listing_id)
+        return jsonify(updated), 200
     except Exception as e:
         msg = str(e).lower()
         if "unauthorized" in msg:

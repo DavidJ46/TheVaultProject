@@ -187,6 +187,10 @@ def get_current_session_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@auth_bp.route('/cart/json')
+def get_cart_json():
+    return jsonify(session.get('cart', []))
+
 @auth_bp.route('/debug/session')
 def debug_session():
     return jsonify(dict(session))

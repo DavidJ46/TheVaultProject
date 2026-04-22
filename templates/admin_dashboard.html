@@ -28,7 +28,9 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Username</th>
                     <th>Email</th>
+                    <th>Role</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -50,6 +52,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Title</th>
+                    <th>Storefront</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -71,10 +75,35 @@
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Active</th>
+                    <th>Items</th>
+                    <th>Categories</th>
                 </tr>
             </thead>
 
             <!-- Populated dynamically -->
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- RETURNS SECTION -->
+    <section>
+        <h2>Returns</h2>
+
+        <button onclick="loadReturns()">Load Returns</button>
+
+        <table id="returnsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Order #</th>
+                    <th>Damage</th>
+                    <th>Image</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
             <tbody></tbody>
         </table>
     </section>

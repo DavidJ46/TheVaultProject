@@ -74,6 +74,10 @@ function createCard(store) {
   const images = Array.isArray(store.images) ? store.images.filter(Boolean) : [];
   const logo = store.logo || null;
   const items = store.items ?? 0;
+  const itemLabel = `${items} ${items === 1 ? "Item" : "Items"}`;
+  const metaLabel = categories.length > 0
+    ? `${itemLabel} | ${categories.join(" • ")}`
+    : itemLabel;
 
   card.innerHTML = `
     <div class="storefront-card-body">
@@ -85,7 +89,7 @@ function createCard(store) {
         <div>
           <h2 class="storefront-name">${store.name}</h2>
           <p class="storefront-meta">
-            ${categories.slice(0, 2).join(" • ")}${categories.length > 0 ? " • " : ""}${items} items
+            ${metaLabel}
           </p>
         </div>
       </div>
@@ -217,7 +221,12 @@ async function fetchStorefronts() {
       return {
         id: store.id,
         name: store.brand_name || "Unnamed Storefront",
-        categories: store.categories || [],
+        categories: Array.isArray(store.categories)
+          ? store.categories
+          : String(store.categories || "")
+              .split(",")
+              .map(category => category.trim())
+              .filter(Boolean),
         items: store.item_count || 0,
         logo: store.logo_url || null,
         images: previewImages.length > 0 ? previewImages : (store.banner_url ? [store.banner_url] : [])
@@ -298,4 +307,3 @@ if (searchInput) {
 fetchStorefronts(); // Updated by Day E 4/9/26 - this will now fetch real storefront data from the Flask API and then render the storefronts. If the API route is not ready or fails, it will fallback to rendering the placeholder storefronts. */
 
 /* renderStorefronts(); // Updated by Day E 3/22/26 */
-

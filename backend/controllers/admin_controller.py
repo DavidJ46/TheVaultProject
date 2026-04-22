@@ -24,7 +24,9 @@ from services.admin_service import (
     remove_user,
     fetch_listings,
     remove_listing,
-    fetch_storefronts
+    fetch_storefronts,
+    fetch_returns,
+    update_return_status_service
 )
 
 # Create Flask Blueprint for admin routes
@@ -53,6 +55,12 @@ def require_admin():
     # Check if the user has the admin role
     if session.get("role") != "admin":
         abort(403)  # Forbidden (not an admin)
+
+
+@admin_bp.route("", methods=["GET"])
+def admin_dashboard():
+    require_admin()
+    return render_template("admin_dashboard.html")
 
 
 @admin_bp.route("/users", methods=["GET"])
@@ -145,3 +153,23 @@ def get_storefronts():
     stores = fetch_storefronts()
 
     return jsonify(stores)
+
+
+@admin_bp.route("/returns", methods=["GET"])
+def get_returns():
+    require_admin()
+    return jsonify(fetch_returns())
+
+
+@admin_bp.route("/returns/<int:return_id>", methods=["PATCH"])
+def update_return_route(return_id):
+    require_admin()
+
+    try:
+        data = request.get_json(silent=True) or {}
+        updated = update_return_status_service(return_id, data.get("status"))
+        return jsonify(updated)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

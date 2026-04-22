@@ -86,6 +86,9 @@ def create_vault_tables():
         cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_3 TEXT;")
         cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS preview_image_4 TEXT;")
         cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS categories TEXT;")
+        # Backfill is_active so existing rows are never NULL (NULL was treated as deactivated)
+        cur.execute("ALTER TABLE storefronts ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
+        cur.execute("UPDATE storefronts SET is_active = TRUE WHERE is_active IS NULL;")
 
         # ________________________________________________________
         # LISTINGS TABLE (Each listing belongs to a storefront)
@@ -110,6 +113,9 @@ def create_vault_tables():
                 status VARCHAR(20) DEFAULT 'ACTIVE'
                     CHECK (status IN ('ACTIVE', 'INACTIVE', 'SOLD_OUT', 'DELETED')),
 
+                storefront_restore_status VARCHAR(20),
+                deleted_restore_status VARCHAR(20),
+
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -120,6 +126,10 @@ def create_vault_tables():
             );
         """
         cur.execute(create_listings_table)
+        cur.execute("ALTER TABLE listings ADD COLUMN IF NOT EXISTS storefront_restore_status VARCHAR(20);")
+        cur.execute("ALTER TABLE listings ADD COLUMN IF NOT EXISTS deleted_restore_status VARCHAR(20);")
+        cur.execute("ALTER TABLE listings ADD COLUMN IF NOT EXISTS is_made_to_order BOOLEAN DEFAULT FALSE;")
+        cur.execute("UPDATE listings SET is_made_to_order = FALSE WHERE is_made_to_order IS NULL;")
 
         # ________________________________________________________
         # LISTING IMAGES TABLE (Multiple images per listing)
@@ -220,6 +230,36 @@ def create_vault_tables():
         cur.execute(create_wishlist_table)
 
         # ________________________________________________________
+        # RETURNS TABLE
+        # Tracks return requests without hard deletion.
+        # ________________________________________________________
+        create_returns_table = """
+            CREATE TABLE IF NOT EXISTS returns (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                order_number VARCHAR(120) NOT NULL,
+                reason TEXT NOT NULL,
+                has_damage BOOLEAN NOT NULL,
+                damage_image_url TEXT,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending'
+                    CHECK (status IN ('pending', 'reviewed', 'resolved')),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_deleted BOOLEAN DEFAULT FALSE,
+
+                CONSTRAINT fk_return_user
+                    FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+        """
+        cur.execute(create_returns_table)
+
+        cur.execute("ALTER TABLE returns ADD COLUMN IF NOT EXISTS damage_image_url TEXT;")
+        cur.execute("ALTER TABLE returns ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+        cur.execute("ALTER TABLE returns ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;")
+
+        # ________________________________________________________
         # CART ITEMS TABLE (Persistent Bag)
         # Added by Ryan Grimes 4/12/26
         # ________________________________________________________
@@ -242,9 +282,57 @@ def create_vault_tables():
         """
         cur.execute(create_cart_items_table)
 
+        # ________________________________________________________
+        # ORDERS TABLE (Checkout orders)
+        # Added by Day Ekoi 4/22/26
+        # ________________________________________________________
+        create_orders_table = """
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                confirmation_number VARCHAR(50) UNIQUE NOT NULL,
+                buyer_first_name VARCHAR(100) NOT NULL,
+                buyer_last_name VARCHAR(100) NOT NULL,
+                buyer_email VARCHAR(255) NOT NULL,
+                buyer_contact VARCHAR(100) NOT NULL,
+                buyer_meeting_location TEXT NOT NULL,
+                total_amount NUMERIC(10,2) NOT NULL,
+                order_status VARCHAR(20) DEFAULT 'SUBMITTED',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                CONSTRAINT fk_order_user
+                    FOREIGN KEY(user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+        """
+        cur.execute(create_orders_table)
+
+        # ________________________________________________________
+        # ORDER ITEMS TABLE (Items per order)
+        # Added by Day Ekoi 4/22/26
+        # ________________________________________________________
+        create_order_items_table = """
+            CREATE TABLE IF NOT EXISTS order_items (
+                id SERIAL PRIMARY KEY,
+                order_id INTEGER NOT NULL,
+                listing_id INTEGER,
+                item_name VARCHAR(255) NOT NULL,
+                quantity INTEGER NOT NULL CHECK (quantity > 0),
+                price_at_purchase NUMERIC(10,2) NOT NULL,
+                selected_size VARCHAR(50),
+
+                CONSTRAINT fk_order_item_order
+                    FOREIGN KEY(order_id)
+                    REFERENCES orders(id)
+                    ON DELETE CASCADE
+            );
+        """
+        cur.execute(create_order_items_table)
+
         conn.commit()
 
-        print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, listing_sizes, purchases, and wishlist tables are ready.")
+        print("DATABASE INITIALIZED: users, storefronts, listings, listing_images, listing_sizes, purchases, wishlist, orders, and order_items tables are ready.")
 
         cur.close()
         conn.close()

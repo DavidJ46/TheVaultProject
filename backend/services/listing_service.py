@@ -38,6 +38,11 @@ from models.listing_model import (
     get_listings_by_storefront_id,
     update_listing,
     soft_delete_listing,
+    deactivate_listing,
+    reactivate_listing,
+    restore_deleted_listing,
+    deactivate_active_listings_for_storefront,
+    restore_listings_after_storefront_reactivation,
     # images
     add_listing_image,
     get_images_for_listing,
@@ -50,6 +55,14 @@ from models.listing_model import (
 )
 
 from models.storefront_model import get_storefront_by_id
+
+# Updated by Day E - April 22nd
+# Listing state rules:
+# - ACTIVE / SOLD_OUT: seller-facing live states when storefront is active
+# - INACTIVE: manually deactivated listing or temporarily hidden listing
+# - DELETED: soft-deleted listing kept for admin tracking
+# - storefront_restore_status: remembers ACTIVE/SOLD_OUT when storefront-level deactivation pauses a listing
+# - deleted_restore_status: remembers the listing's last recoverable state before soft delete
 
 
 def is_admin(current_user):
@@ -122,9 +135,19 @@ def create_listing_service(current_user, storefront_id, data):
     if fulfillment_type not in ["IN_STOCK", "PREORDER"]:
         raise Exception("fulfillment_type must be IN_STOCK or PREORDER.")
 
+    is_made_to_order = bool(data.get("is_made_to_order", False))
+
     quantity_on_hand = data.get("quantity_on_hand")
     if fulfillment_type == "PREORDER":
         quantity_on_hand = None
+    elif is_made_to_order:
+        # Made-to-order listings do not require inventory — default to 0 if omitted
+        try:
+            quantity_on_hand = int(quantity_on_hand) if quantity_on_hand is not None else 0
+        except Exception:
+            quantity_on_hand = 0
+        if quantity_on_hand < 0:
+            raise Exception("quantity_on_hand cannot be negative.")
     else:
         if quantity_on_hand is None:
             raise Exception("quantity_on_hand is required for IN_STOCK listings.")
@@ -145,8 +168,8 @@ def create_listing_service(current_user, storefront_id, data):
 
     status = (data.get("status") or "ACTIVE").strip()
 
-    # Auto mark SOLD_OUT if inventory hits zero
-    if fulfillment_type == "IN_STOCK" and quantity_on_hand == 0:
+    # Auto mark SOLD_OUT if inventory hits zero — never for made-to-order
+    if not is_made_to_order and fulfillment_type == "IN_STOCK" and quantity_on_hand == 0:
         status = "SOLD_OUT"
 
     return create_listing(
@@ -157,7 +180,8 @@ def create_listing_service(current_user, storefront_id, data):
         fulfillment_type=fulfillment_type,
         quantity_on_hand=quantity_on_hand,
         sizes_available=sizes_available,
-        status=status
+        status=status,
+        is_made_to_order=is_made_to_order
     )
 
 
@@ -176,6 +200,14 @@ def get_listings_for_storefront_service(storefront_id):
     Returns all listings for a given storefront.
     """
     return get_listings_by_storefront_id(storefront_id)
+
+
+def get_listings_for_storefront_with_options_service(storefront_id, include_deleted=False):
+    """
+    Returns storefront listings with optional deleted listing inclusion.
+    Used by owner-facing management views.
+    """
+    return get_listings_by_storefront_id(storefront_id, include_deleted=include_deleted)
 
 
 def update_listing_service(current_user, listing_id, data):
@@ -199,9 +231,22 @@ def update_listing_service(current_user, listing_id, data):
     if fulfillment_type not in ["IN_STOCK", "PREORDER"]:
         raise Exception("fulfillment_type must be IN_STOCK or PREORDER.")
 
+    is_made_to_order = None
+    if "is_made_to_order" in data:
+        is_made_to_order = bool(data["is_made_to_order"])
+
+    effective_mto = is_made_to_order if is_made_to_order is not None else listing.get("is_made_to_order", False)
+
     quantity_on_hand = data.get("quantity_on_hand", listing["quantity_on_hand"])
     if fulfillment_type == "PREORDER":
         quantity_on_hand = None
+    elif effective_mto:
+        try:
+            quantity_on_hand = int(quantity_on_hand) if quantity_on_hand is not None else 0
+        except Exception:
+            quantity_on_hand = 0
+        if quantity_on_hand < 0:
+            raise Exception("quantity_on_hand cannot be negative.")
     else:
         if quantity_on_hand is None:
             raise Exception("quantity_on_hand is required for IN_STOCK listings.")
@@ -239,7 +284,7 @@ def update_listing_service(current_user, listing_id, data):
     if status is not None:
         status = str(status).strip()
 
-    if status is None and fulfillment_type == "IN_STOCK" and quantity_on_hand == 0:
+    if status is None and not effective_mto and fulfillment_type == "IN_STOCK" and quantity_on_hand == 0:
         status = "SOLD_OUT"
 
     return update_listing(
@@ -250,7 +295,8 @@ def update_listing_service(current_user, listing_id, data):
         fulfillment_type=fulfillment_type,
         quantity_on_hand=quantity_on_hand,
         sizes_available=sizes_available,
-        status=status
+        status=status,
+        is_made_to_order=is_made_to_order
     )
 
 
@@ -268,6 +314,103 @@ def delete_listing_service(current_user, listing_id):
     _assert_can_manage_listing(current_user, listing)
 
     return soft_delete_listing(listing_id)
+
+
+def deactivate_listing_service(current_user, listing_id):
+    """
+    Deactivates a listing without deleting it.
+    """
+    if current_user is None:
+        raise Exception("Error! Unauthorized User.")
+
+    listing = get_listing_by_id(listing_id)
+    if listing is None:
+        raise Exception("Listing not found.")
+
+    if listing["status"] == "DELETED":
+        raise Exception("Deleted listings cannot be deactivated.")
+
+    _assert_can_manage_listing(current_user, listing)
+    return deactivate_listing(listing_id)
+
+
+def _get_live_reactivation_status(listing):
+    if listing.get("fulfillment_type") == "IN_STOCK" and int(listing.get("quantity_on_hand") or 0) == 0:
+        return "SOLD_OUT"
+    return "ACTIVE"
+
+
+def reactivate_listing_service(current_user, listing_id):
+    """
+    Reactivates a manually deactivated listing.
+    Blocked if the parent storefront is currently deactivated.
+    """
+    if current_user is None:
+        raise Exception("Error! Unauthorized User.")
+
+    listing = get_listing_by_id(listing_id)
+    if listing is None:
+        raise Exception("Listing not found.")
+
+    _assert_can_manage_listing(current_user, listing)
+
+    storefront = get_storefront_by_id(listing["storefront_id"])
+    if storefront is None:
+        raise Exception("Storefront not found.")
+    if storefront.get("is_active") is False:
+        raise Exception("Reactivate the storefront before reactivating this listing.")
+    if listing["status"] == "DELETED":
+        raise Exception("Deleted listings cannot be reactivated. Restore the listing instead.")
+
+    live_status = _get_live_reactivation_status(listing)
+    return reactivate_listing(listing_id, live_status)
+
+
+def restore_deleted_listing_service(current_user, listing_id):
+    """
+    Restores a soft-deleted listing while preserving active vs inactive state.
+    """
+    if current_user is None:
+        raise Exception("Error! Unauthorized User.")
+
+    listing = get_listing_by_id(listing_id)
+    if listing is None:
+        raise Exception("Listing not found.")
+
+    _assert_can_manage_listing(current_user, listing)
+
+    if listing["status"] != "DELETED":
+        raise Exception("Only deleted listings can be restored.")
+
+    restored_status = listing.get("deleted_restore_status") or _get_live_reactivation_status(listing)
+    storefront = get_storefront_by_id(listing["storefront_id"])
+    if storefront is None:
+        raise Exception("Storefront not found.")
+
+    storefront_restore_status = None
+    if storefront.get("is_active") is False and restored_status in ("ACTIVE", "SOLD_OUT"):
+        storefront_restore_status = restored_status
+        restored_status = "INACTIVE"
+
+    return restore_deleted_listing(
+        listing_id,
+        restored_status,
+        storefront_restore_status=storefront_restore_status
+    )
+
+
+def deactivate_storefront_listings_service(storefront_id):
+    """
+    Temporarily inactivates only the listings that were live before storefront shutdown.
+    """
+    return deactivate_active_listings_for_storefront(storefront_id)
+
+
+def restore_storefront_listings_service(storefront_id):
+    """
+    Restores only the listings that storefront-level deactivation inactivated.
+    """
+    return restore_listings_after_storefront_reactivation(storefront_id)
 
 
 # ________________________________________________________
@@ -289,6 +432,12 @@ def add_listing_image_service(current_user, listing_id, image_url, is_primary=Fa
         raise Exception("Listing not found.")
 
     _assert_can_manage_listing(current_user, listing)
+
+    # Updated by Day E - April 22nd
+    # Keep listing image management aligned with the create flow: max 4 images total.
+    existing_images = get_images_for_listing(listing_id)
+    if len(existing_images) >= 4:
+        raise Exception("You can upload up to 4 listing images.")
 
     return add_listing_image(
         listing_id=listing_id,

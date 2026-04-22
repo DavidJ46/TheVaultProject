@@ -10,14 +10,24 @@ from controllers.purchase_controller import purchase_bp
 from controllers.wishlist_controller import wishlist_bp
 from controllers.admin_controller import admin_bp
 from controllers.auth_controller import auth_bp # Updated 3/19/2026 by Ryan Grimes
+from controllers.return_controller import returns_bp
+from controllers.checkout_controller import checkout_bp
+from init_db import create_vault_tables
 
 
 def create_app():
-    app = Flask(__name__, 
-                template_folder='templates', 
+    app = Flask(__name__,
+                template_folder='templates',
                 static_folder='static')
 
     app.secret_key = 'vault_secure_key_2026'
+
+    # Run DB migrations on every startup so new columns are always present
+    try:
+        from init_db import create_vault_tables
+        create_vault_tables()
+    except Exception as _db_init_err:
+        print(f"[startup] DB migration warning: {_db_init_err}")
 
     #The Welcome Screen (Default) Ryan Grimes 3/19/2026
     @app.route('/')
@@ -44,10 +54,19 @@ def create_app():
     def cart():
         return render_template('cart.html')
 
-    #Route to the Checkout - Updates 3/25/2026
+    #Route to the Checkout - Updated 4/22/2026
     @app.route('/checkout')
     def checkout():
+        if not session.get("user"):
+            return redirect(url_for("auth.login"))
         return render_template('checkout.html')
+
+    # Route to the Order Confirmation page - Added 4/22/2026
+    @app.route('/order-confirmation')
+    def order_confirmation():
+        if not session.get("user"):
+            return redirect(url_for("auth.login"))
+        return render_template('order_confirmation.html')
     
     # Route to My Storefront dashboard page - Updated 4/9/2026
     @app.route('/my-storefront')
@@ -64,6 +83,8 @@ def create_app():
     app.register_blueprint(purchase_bp)
     app.register_blueprint(wishlist_bp)
     app.register_blueprint(admin_bp) # Updated 3/19/2026 by Ryan Grimes
+    app.register_blueprint(returns_bp)
+    app.register_blueprint(checkout_bp, url_prefix='/api')
 
     @app.get("/health")
     def health():

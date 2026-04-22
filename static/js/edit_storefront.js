@@ -16,12 +16,87 @@ Handles the Edit Storefront page:
 
 const form = document.getElementById("storefrontForm");
 const cancelBtn = document.getElementById("cancelBtn");
+const deactivateBtn = document.getElementById("deactivateBtn");
+const categoryCheckboxes = Array.from(document.querySelectorAll('input[name="categories"]'));
+const categoryValidationMessage = document.getElementById("categoryValidationMessage");
+const MAX_CATEGORY_SELECTIONS = 3;
 
 const storefrontId = parseInt(window.location.pathname.split("/")[2]);
 
 cancelBtn.addEventListener("click", () => {
     window.location.href = "/storefronts/dashboard";
 });
+
+
+function getSelectedCategories() {
+    return categoryCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+}
+
+
+function showCategoryValidation(message = "") {
+    if (!categoryValidationMessage) return;
+    categoryValidationMessage.textContent = message;
+}
+
+
+function validateCategoryLimit() {
+    const selected = getSelectedCategories();
+    if (selected.length > MAX_CATEGORY_SELECTIONS) {
+        showCategoryValidation(`You can select up to ${MAX_CATEGORY_SELECTIONS} categories.`);
+        return false;
+    }
+    showCategoryValidation("");
+    return true;
+}
+
+
+function setupCategoryLimitGuard() {
+    categoryCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+            if (getSelectedCategories().length > MAX_CATEGORY_SELECTIONS) {
+                checkbox.checked = false;
+                showCategoryValidation(`You can select up to ${MAX_CATEGORY_SELECTIONS} categories.`);
+                return;
+            }
+            validateCategoryLimit();
+        });
+    });
+}
+
+
+function configureStorefrontStatusButton(storefront, user) {
+    if (!deactivateBtn) return;
+
+    const isActive = storefront?.is_active !== false;
+    deactivateBtn.textContent = isActive ? "Deactivate" : "Reactivate";
+    deactivateBtn.classList.toggle("danger-btn", isActive);
+    deactivateBtn.classList.toggle("reactivate-btn", !isActive);
+
+    deactivateBtn.onclick = async () => {
+        const action = isActive ? "deactivate" : "reactivate";
+        const confirmed = confirm(`Are you sure you want to ${action} this storefront?`);
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`/api/storefronts/${storefrontId}/${action}`, {
+                method: "PATCH",
+                headers: {
+                    "X-User-Id": user.id,
+                    "X-User-Role": user.role
+                }
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || `Failed to ${action} storefront.`);
+            }
+
+            window.location.href = "/storefronts/dashboard";
+        } catch (error) {
+            alert(error.message || `Could not ${action} storefront.`);
+        }
+    };
+}
 
 
 // shows thumbnail + filename in a preview container
@@ -151,6 +226,7 @@ async function loadStorefront(userId, userRole) {
             const cb = document.querySelector(`input[name="categories"][value="${val}"]`);
             if (cb) cb.checked = true;
         });
+        validateCategoryLimit();
     }
 
     // show existing preview images in individual slots - Updated by Day Ekoi 4/20/26
@@ -188,6 +264,8 @@ async function init() {
         setupDropZone("previewZone2", "previewImage2", "previewPreview2", 1);
         setupDropZone("previewZone3", "previewImage3", "previewPreview3", 1);
         setupDropZone("previewZone4", "previewImage4", "previewPreview4", 1);
+        setupCategoryLimitGuard();
+        configureStorefrontStatusButton(currentStorefront, user);
 
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -230,6 +308,9 @@ async function init() {
 
             const formData = new FormData(form);
             const checkedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
+            if (!validateCategoryLimit()) {
+                return;
+            }
 
             const payload = {
                 brand_name: formData.get("brand_name"),
