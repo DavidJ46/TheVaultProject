@@ -58,3 +58,15 @@ button.delete {
     background-color: red;
     color: white;
 }
+
+/* Logout button styling - added 4/23/2026 by David Jackson */
+.logout-btn {
+    background: #d4af37;
+    color: black;
+    font-weight: bold;
+    border: none;
+}
+
+.logout-btn:hover {
+    filter: brightness(1.2);
+}

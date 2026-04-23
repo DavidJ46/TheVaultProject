@@ -17,6 +17,14 @@
     <!-- Main page title -->
     <h1>Admin Dashboard</h1>
 
+    <!-- Added 4/23/2026 by David Jackson -->
+    <!-- Logout Button -->
+    <div style="text-align: right; margin-bottom: 20px;">
+        <a href="{{ url_for('auth.logout') }}">
+            <button class="logout-btn">Logout</button>
+        </a>
+    </div>
+
     <!-- USERS SECTION -->
     <section>
         <h2>Users</h2>
