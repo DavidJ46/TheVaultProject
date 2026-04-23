@@ -15,8 +15,7 @@ Example Request Flow:
 Frontend → Controller → Service → Model → Database
 """
 
-from flask import Blueprint, jsonify, request, session, abort
-from flask import render_template  # Added by David Jackson 3/23/2026
+from flask import Blueprint, jsonify, request, session, abort, render_template  # Updated 4/21/2026
 
 # Import service functions
 from services.admin_service import (
@@ -25,6 +24,7 @@ from services.admin_service import (
     fetch_listings,
     remove_listing,
     fetch_storefronts,
+    remove_storefront,
     fetch_returns,
     update_return_status_service
 )
@@ -60,6 +60,20 @@ def require_admin():
 @admin_bp.route("", methods=["GET"])
 def admin_dashboard():
     require_admin()
+    return render_template("admin_dashboard.html")
+
+
+@admin_bp.route("/dashboard", methods=["GET"])
+def admin_dashboard_page():
+    """
+    GET /admin/dashboard
+
+    Renders the admin dashboard page.
+    """
+
+    # Ensure only admins can access the dashboard
+    require_admin()
+
     return render_template("admin_dashboard.html")
 
 
@@ -153,6 +167,15 @@ def get_storefronts():
     stores = fetch_storefronts()
 
     return jsonify(stores)
+
+
+@admin_bp.route("/storefronts/<int:store_id>", methods=["DELETE"])
+def delete_storefront_route(store_id):
+    require_admin()
+
+    result = remove_storefront(store_id)
+
+    return jsonify(result)
 
 
 @admin_bp.route("/returns", methods=["GET"])

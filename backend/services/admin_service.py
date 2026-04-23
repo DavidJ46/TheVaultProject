@@ -8,6 +8,7 @@ from models.admin_model import (
     get_all_listings,
     delete_listing,
     get_admin_storefronts,
+    delete_storefront,
     get_admin_returns,
     update_admin_return_status,
 )
@@ -37,6 +38,27 @@ def remove_listing(listing_id):
 
 def fetch_storefronts():
     return get_admin_storefronts()
+
+
+def remove_storefront(store_id):
+    """
+    Deletes a storefront from the system.
+
+    Parameters:
+        store_id (int): Storefront identifier
+
+    Returns:
+        dict: Success message
+    """
+
+    # Basic validation to ensure a storefront ID is provided
+    if not store_id:
+        raise ValueError("Storefront ID required")
+
+    # Call the model to delete the storefront
+    delete_storefront(store_id)
+
+    return {"message": "Storefront removed successfully"}
 
 
 def fetch_returns():
