@@ -25,3 +25,8 @@ def update_wishlist(item_name: str) -> bool:
         _data.wishlist.append(item_name) # Add the item to the list
         return True # Return true to indicate success
     return False # Return false to indicate it was a duplicate
+
+
+def update_purchase_history(item_name: str) -> None:
+    # Append purchased item to purchase history in insertion order.
+    _data.purchase_history.append(item_name)
