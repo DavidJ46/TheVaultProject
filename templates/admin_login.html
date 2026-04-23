@@ -1,10 +1,10 @@
-<!-- Created 3/21/2026 by Ryan Grimes-->  
+<!-- Admin Login Page - Created by David Jackson 4/18/26 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Vault | Secure Login</title>
+    <title>The Vault | Admin Login</title>
     <style>
         body, html {
             margin: 0; padding: 0; height: 100%; width: 100%;
@@ -21,7 +21,6 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* Metallic Glass Form Panel */
         .auth-card {
             background: rgba(0, 0, 0, 0.88);
             border: 1px solid #B8860B;
@@ -69,7 +68,6 @@
             box-shadow: inset 0 0 5px rgba(184, 134, 11, 0.2);
         }
 
-        /* High-Security Submit Button */
         .submit-btn {
             width: 100%;
             background: linear-gradient(135deg, #B8860B, #9A7107);
@@ -104,54 +102,31 @@
         }
 
         .footer-links a:hover { color: #B8860B; }
-
-        /* Admin Button Styling - added by David Jackson 4/20/26 */
-        .admin-btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            border: 1px solid #B8860B;
-            color: #B8860B;
-            text-decoration: none;
-            font-size: 1.2vh;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-
-        .admin-btn:hover {
-            background: #B8860B;
-            color: black;
-            box-shadow: 0 0 10px rgba(184, 134, 11, 0.5);
-        }
-
     </style>
 </head>
 <body>
     <div class="vault-wrapper">
         <div class="auth-card">
-            <h2>DECRYPT ACCESS</h2>
-            <form action="{{ url_for('auth.login') }}" method="POST">
+            <h2>ADMIN ACCESS</h2>
+
+            <form action="{{ url_for('auth.admin_login') }}" method="POST">
                 <div class="input-group">
-                    <label>Identity (Username)</label>
-                    <input type="text" name="username" required placeholder="User_01" autofocus>
+                    <label>Admin Username</label>
+                    <input type="text" name="username" required placeholder="admin" autofocus>
                 </div>
+
                 <div class="input-group">
-                    <label>Access Cipher (Password)</label>
+                    <label>Admin Password</label>
                     <input type="password" name="password" required placeholder="••••••••">
                 </div>
+
                 <button type="submit" class="submit-btn">Authorize</button>
             </form>
-            <div class="footer-links">
-                <a href="{{ url_for('index') }}">← Portal</a>
-                <a href="{{ url_for('auth.signup') }}">Create Identity</a>
-            </div>
-            
-            <!-- Admin Login Button added by David Jackson 4/20/26 -->
-            <a href="{{ url_for('auth.admin_login') }}" class="admin-btn">
-                Admin Access
-            </a>
 
+            <div class="footer-links">
+                <a href="{{ url_for('auth.login') }}">← User Login</a>
+                <a href="{{ url_for('index') }}">Portal</a>
+            </div>
         </div>
     </div>
 </body>

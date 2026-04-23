@@ -194,3 +194,20 @@ def get_cart_json():
 @auth_bp.route('/debug/session')
 def debug_session():
     return jsonify(dict(session))
+
+# Admin login route - added by David Jackson 4/19/26
+@auth_bp.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        user = request.form.get('username')
+        pw = request.form.get('password')
+
+        # temporary hardcoded admin login for testing
+        if user == "admin" and pw == "admin123":
+            session['user'] = user
+            session['role'] = 'admin'
+            return redirect(url_for('admin.admin_dashboard'))
+
+        return "Invalid Admin Credentials. <a href='/auth/admin-login'>Try again</a>"
+
+    return render_template('admin_login.html')

@@ -1,5 +1,4 @@
 // File Created By David Jackson
-// Updated by Day Ekoi - Iteration 5 - 4/20/26 - fixed storefront table to use brand_name field
 
 // USERS SECTION
 
@@ -22,6 +21,7 @@ async function loadUsers() {
                 <td>${user.username || ""}</td>
                 <td>${user.email}</td>
                 <td>${user.role || "user"}</td>
+                <td>${user.created_at || ""}</td>
                 <td>
                     <!-- Delete button calls deleteUser() -->
                     <button class="delete" onclick="deleteUser(${user.id})">Delete</button>
@@ -63,11 +63,15 @@ async function loadListings() {
         const row = `
             <tr>
                 <td>${listing.id}</td>
+                <td>${listing.storefront_id}</td>
                 <td>${listing.title}</td>
-                <td>${listing.storefront_name || "Unknown"}</td>
+                <td>${listing.price}</td>
+                <td>${listing.quantity_on_hand}</td>
                 <td>${listing.status || "ACTIVE"}</td>
+                <td>${listing.fulfillment_type || ""}</td>
+                <td>${listing.created_at || ""}</td>
                 <td>
-                    <button class="delete" onclick="deleteListing(${listing.id})">Soft Delete</button>
+                    <button class="delete" onclick="deleteListing(${listing.id})">Delete</button>
                 </td>
             </tr>
         `;
@@ -106,18 +110,34 @@ async function loadStorefronts() {
         const row = `
             <tr>
                 <td>${store.id}</td>
-                <td>${store.brand_name}</td>
-                <td>${store.is_active ? "Yes" : "No"}</td>
-                <td>${store.item_count ?? 0}</td>
-                <td>${store.categories || ""}</td>
+                <td>${store.brand_name || store.name || ""}</td>
+                <td>${store.owner_id}</td>
+                <td>
+                    <!-- Delete storefront button -->
+                    <button class="delete" onclick="deleteStorefront(${store.id})">Delete</button>
+                </td>
             </tr>
         `;
         table.innerHTML += row;
     });
 }
 
+/*
+ * Delete a storefront by ID
+ * Calls: DELETE /admin/storefronts/<id>
+ */
+async function deleteStorefront(storeId) {
+    await fetch(`/admin/storefronts/${storeId}`, {
+        method: 'DELETE'
+    });
+
+    // Reload storefronts after deletion
+    loadStorefronts();
+}
+
 
 // RETURNS SECTION
+
 async function loadReturns() {
     const response = await fetch('/admin/returns');
     const returns = await response.json();
@@ -132,7 +152,7 @@ async function loadReturns() {
             <td>${item.username || ""}<br><small>${item.email || ""}</small></td>
             <td>${item.order_number}</td>
             <td>${item.has_damage ? "Yes" : "No"}</td>
-            <td>${item.damage_image_url ? `<a href="${item.damage_image_url}" target="_blank" rel="noopener">View</a>` : "—"}</td>
+            <td>${item.damage_image_url ? `<a href="${item.damage_image_url}" target="_blank">View</a>` : "—"}</td>
             <td>
                 <select data-return-id="${item.id}">
                     <option value="pending" ${item.status === "pending" ? "selected" : ""}>Pending</option>
@@ -160,8 +180,7 @@ async function saveReturnStatus(returnId) {
     });
 
     if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        alert(result.error || "Failed to update return status.");
+        alert("Failed to update return status.");
         return;
     }
 
