@@ -15,6 +15,7 @@ from models.checkout_model import (
     clear_cart_for_user,
     update_listing_size_inventory,
     remove_purchased_from_wishlist,
+    check_listing_availability,
 )
 
 
@@ -33,6 +34,13 @@ def complete_transaction_from_session(user_id, session_cart, buyer_details):
     """
     if not session_cart:
         raise Exception("Cart is empty.")
+
+    # Validate all cart items are still available before creating the order
+    for item in session_cart:
+        item_id = item.get("id")
+        quantity = int(item.get("quantity", 1))
+        if item_id:
+            check_listing_availability(int(item_id), quantity)
 
     first_name = (buyer_details.get("first_name") or "").strip()
     last_name = (buyer_details.get("last_name") or "").strip()

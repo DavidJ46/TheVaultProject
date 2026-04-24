@@ -179,10 +179,47 @@ def clear_cart_for_user(user_id):
     return {"deleted_count": deleted_count}
 
 
+def check_listing_availability(listing_id, quantity_requested):
+    """Raises if the listing is sold out or has insufficient stock. Skips made-to-order items."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT title, status, quantity_on_hand, is_made_to_order FROM listings WHERE id = %s",
+        (listing_id,)
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not row:
+        raise Exception(f"Item (ID {listing_id}) is no longer available.")
+    title, status, qty_on_hand, is_made_to_order = row
+    if is_made_to_order:
+        return
+    if status == "SOLD_OUT":
+        raise Exception(f'"{title}" is sold out.')
+    if qty_on_hand is not None and int(qty_on_hand) < quantity_requested:
+        raise Exception(
+            f'"{title}" only has {qty_on_hand} in stock (you requested {quantity_requested}).'
+        )
+
+
 def update_listing_size_inventory(listing_id, size, purchased_qty):
     """Decrements per-size inventory and syncs listing quantity_on_hand after purchase."""
     conn = get_connection()
     cur = conn.cursor()
+    cur.execute(
+        "SELECT quantity FROM listing_sizes WHERE listing_id = %s AND size = %s",
+        (listing_id, size)
+    )
+    size_row = cur.fetchone()
+    if size_row is None or int(size_row[0]) < purchased_qty:
+        cur.close()
+        conn.close()
+        available = int(size_row[0]) if size_row else 0
+        raise Exception(
+            f"Insufficient stock for listing {listing_id} size '{size}': "
+            f"requested {purchased_qty}, available {available}."
+        )
     cur.execute("""
         UPDATE listing_sizes
         SET quantity = GREATEST(0, quantity - %s)

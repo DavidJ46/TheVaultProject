@@ -389,6 +389,7 @@ async function createListingCard(item, wishlistIds, currentUserId) {
     const isOneSizeItem = hasSizes && sizeOptions.length === 1 && sizeOptions[0] === "One Size";
     const isMadeToOrder = Boolean(item.is_made_to_order);
     const maxQuantity = isMadeToOrder ? 999 : (item.quantity_on_hand || 1);
+    const isSoldOut = !isMadeToOrder && (item.status === "SOLD_OUT" || item.quantity_on_hand === 0);
 
     let sizeFieldMarkup;
     if (isOneSizeItem) {
@@ -445,7 +446,10 @@ async function createListingCard(item, wishlistIds, currentUserId) {
                 <label class="field-label" for="countInput-${listingId}">Count</label>
                 <input id="countInput-${listingId}" class="count-input" type="number" min="1" max="${maxQuantity}" step="1" value="1" inputmode="numeric">
             </div>
-            <button type="button" class="add-to-cart-btn" ${hasSizes ? "" : "disabled"}>Add to Cart</button>
+            ${isSoldOut
+                ? `<span class="sold-out-label" style="display:block;width:100%;padding:0.6rem 1rem;background:#3a3a3a;color:#888888;font-size:0.85rem;font-weight:600;text-align:center;border-radius:6px;cursor:not-allowed;letter-spacing:0.5px;box-sizing:border-box;">Sold Out</span>`
+                : `<button type="button" class="add-to-cart-btn" ${hasSizes ? "" : "disabled"}>Add to Cart</button>`
+            }
         </div>
     `;
 
@@ -507,62 +511,69 @@ async function createListingCard(item, wishlistIds, currentUserId) {
     const countInput = card.querySelector(".count-input");
     const addToCartBtn = card.querySelector(".add-to-cart-btn");
 
-    addToCartBtn.addEventListener("click", async () => {
-        if (!currentUserId) {
-            alert("Please log in to add items to your cart.");
-            window.location.href = "/auth/login";
-            return;
-        }
-
-        const selectedSize = isOneSizeItem ? "One Size" : (sizeSelect ? sizeSelect.value : "");
-        const selectedCount = Number.parseInt(countInput.value, 10);
-        const effectiveMax = isMadeToOrder ? Number.POSITIVE_INFINITY : (item.quantity_on_hand || 1);
-
-        if (!selectedSize) {
-            showCartToast("Please select a size.", "error");
-            return;
-        }
-
-        if (!Number.isInteger(selectedCount) || selectedCount < 1) {
-            showCartToast("Count must be at least 1.", "error");
-            countInput.value = "1";
-            return;
-        }
-
-        if (!isMadeToOrder && selectedCount > effectiveMax) {
-            showCartToast(`Maximum available quantity is ${effectiveMax}.`, "error");
-            countInput.value = String(effectiveMax);
-            return;
-        }
-
-        addToCartBtn.disabled = true;
-
-        try {
-            const formData = new FormData();
-            formData.append("item_id", String(listingId));
-            formData.append("item_name", title);
-            formData.append("price", String(numericPrice));
-            formData.append("quantity", String(selectedCount));
-            formData.append("size", selectedSize);
-
-            const response = await fetch("/auth/add_to_cart", {
-                method: "POST",
-                body: formData,
-                redirect: "follow"
-            });
-
-            if (!response.ok) {
-                throw new Error("Unable to add item to cart right now.");
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener("click", async () => {
+            if (!currentUserId) {
+                alert("Please log in to add items to your cart.");
+                window.location.href = "/auth/login";
+                return;
             }
 
-            showCartToast(`${title} (${selectedSize}) x${selectedCount} added to cart.`);
-        } catch (error) {
-            console.error("Add to cart failed:", error);
-            showCartToast(error.message || "Unable to add to cart.", "error");
-        } finally {
-            addToCartBtn.disabled = false;
-        }
-    });
+            const selectedSize = isOneSizeItem ? "One Size" : (sizeSelect ? sizeSelect.value : "");
+            const selectedCount = Number.parseInt(countInput.value, 10);
+            const effectiveMax = isMadeToOrder ? Number.POSITIVE_INFINITY : (item.quantity_on_hand || 1);
+
+            if (!selectedSize) {
+                showCartToast("Please select a size.", "error");
+                return;
+            }
+
+            if (!Number.isInteger(selectedCount) || selectedCount < 1) {
+                showCartToast("Count must be at least 1.", "error");
+                countInput.value = "1";
+                return;
+            }
+
+            if (!isMadeToOrder && selectedCount > effectiveMax) {
+                showCartToast(`Maximum available quantity is ${effectiveMax}.`, "error");
+                countInput.value = String(effectiveMax);
+                return;
+            }
+
+            addToCartBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append("item_id", String(listingId));
+                formData.append("item_name", title);
+                formData.append("price", String(numericPrice));
+                formData.append("quantity", String(selectedCount));
+                formData.append("size", selectedSize);
+
+                const response = await fetch("/auth/add_to_cart", {
+                    method: "POST",
+                    body: formData,
+                    redirect: "follow"
+                });
+
+                if (!response.ok) {
+                    let errorMsg = "Unable to add item to cart right now.";
+                    try {
+                        const errData = await response.json();
+                        if (errData && errData.error) errorMsg = errData.error;
+                    } catch (_) {}
+                    throw new Error(errorMsg);
+                }
+
+                showCartToast(`${title} (${selectedSize}) x${selectedCount} added to cart.`);
+            } catch (error) {
+                console.error("Add to cart failed:", error);
+                showCartToast(error.message || "Unable to add to cart.", "error");
+            } finally {
+                addToCartBtn.disabled = false;
+            }
+        });
+    }
 
     return card;
 }

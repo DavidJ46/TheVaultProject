@@ -104,6 +104,27 @@ def add_to_cart():
     quantity = request.form.get('quantity', 1)
     size = request.form.get('size')
 
+    # Validate listing availability before adding to cart
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT status, quantity_on_hand, is_made_to_order FROM listings WHERE id = %s",
+            (item_id,)
+        )
+        listing = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not listing:
+            return jsonify({"error": "This item is no longer available."}), 404
+        listing_status, qty_on_hand, is_made_to_order = listing
+        if listing_status == "SOLD_OUT" or (
+            not is_made_to_order and qty_on_hand is not None and int(qty_on_hand) <= 0
+        ):
+            return jsonify({"error": f"{item_name} is sold out and cannot be added to your bag."}), 409
+    except Exception as e:
+        print(f"DB Error checking listing availability: {e}")
+
     # PERSIST TO DATABASE
     try:
         conn = get_connection()

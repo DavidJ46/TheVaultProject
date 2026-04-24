@@ -293,7 +293,9 @@ async function loadMyStorefront() {
         }
 
         const listings = await listRes.json();
-        const visibleListings = Array.isArray(listings) ? listings : [];
+        const visibleListings = Array.isArray(listings)
+            ? listings.filter((item) => item.status !== "DELETED")
+            : [];
 
         listingGrid.innerHTML = "";
         if (!visibleListings.length) {
