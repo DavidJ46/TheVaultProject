@@ -7,14 +7,20 @@ CSC 405 — Spring 26'
 
 ---
 
+## Live Deployment
+
+**http://the-vault-env.eba-a7vun5tm.us-east-2.elasticbeanstalk.com**
+
+---
+
 ## What is The Vault?
 
-The Vault is a web-based campus marketplace exclusively for Hampton University students. It allows student brand owners to create storefronts, publish clothing listings, and manage inventory, while other students can browse, wishlist, and purchase items. The platform follows a vault/bank aesthetic with black and gold as primary colors and uses heist-themed terminology throughout the UI.
+The Vault is a web-based campus marketplace exclusively for Hampton University students. It allows student brand owners to create storefronts, publish clothing listings, and manage inventory, while other students can browse, wishlist, and purchase items.
 
 ---
 
 ## Tech Stack
- 
+
 | Layer | Technology |
 |---|---|
 | Backend | Python, Flask |
@@ -22,174 +28,8 @@ The Vault is a web-based campus marketplace exclusively for Hampton University s
 | Database | PostgreSQL (AWS RDS) |
 | Image Storage | Amazon S3 |
 | Cloud Hosting | AWS Elastic Beanstalk |
-| Cloud Infranstructure | Amazon Web Services (AWS) |
 | DB Adapter | psycopg2 |
 | Version Control | GitHub |
-| Project Management | Jira |
-| Collaboration | GoogleDrive |
-| IDE | VS Code |
- 
-### AWS Services
- 
-| Service | Purpose |
-|---|---|
-| **AWS Elastic Beanstalk** | Hosts and runs the Flask backend application. Receives HTTPS requests from the browser, handles server-side processing, and communicates with RDS and S3. |
-| **AWS RDS (PostgreSQL)** | Managed relational database that stores all persistent data: users, storefronts, listings, orders, wishlists, and return records. The Flask backend communicates with RDS using SQL queries via `psycopg2`. |
-| **Amazon RDS Endpoint** | Provides the hostname and port used by the Flask app to establish a secure connection to the PostgreSQL database instance. |
-| **Amazon S3** | Stores all listing images externally. The backend uploads images to S3 and saves the resulting image URL in the database for retrieval and display. |
-| **AWS IAM (Identity and Access Management)** | Controls access permissions across AWS resources. Ensures only authorized roles can access RDS, S3, and the deployment environment. |
-| **Amazon VPC (Virtual Private Cloud)** | Provides network-level isolation between infrastructure components. Ensures controlled communication between the application server and the database layer. |
-| **AWS Security Groups** | Acts as a virtual firewall. Restricts database access so that only the Elastic Beanstalk environment can communicate with the RDS instance no public access. Database connection runs over TCP/IP on port 5432. |
- 
----
-
-## Features
-
-### Authentication
-- User registration restricted to `@hamptonu.edu` and `@my.hamptonu.edu` email addresses
-- Secure password hashing via `auth_utils.py`
-- Role-based access control: Shopper, Brand Owner, Admin
-
-### Storefronts
-- Users can create a storefront to gain seller capabilities
-- Storefront stores brand name, description, logo, banner, and contact info
-- Each storefront is tied to a user account via foreign key relationship
-
-### Listings
-- Brand owners can create, edit, and deactivate their own listings
-- Supports inventory-based and made-to-order (pre-order) fulfillment types
-- Size-based inventory tracking with automatic SOLD_OUT status when quantity hits 0
-- Multiple images per listing stored in Amazon S3
-
-### Storefront Browsing (Frontend)
-- Storefront homepage dynamically renders all active storefront cards
-- Individual storefront view page with banner, logo, description, and listing grid
-- Create Storefront form with full input validation
-
-### Cart & Wishlist
-- Users can add listings to a shopping bag
-- Wishlist feature allows users to save listings for later
-
-### Account Dashboard
-- View personal listings, purchase history, wishlist, and sold history
-- Profile and settings management
-
-### Admin
-- Admins can view, manage, and delete any user, listing, or storefront
-- Admin routes are gated and protected under `/admin` prefix
-
----
-
-## Project Structure
-
-```
-TheVaultProject/
-├── app.py                          # Entry point, registers all blueprints
-├── db.py                           # Database connection
-├── init_db.py                      # Schema initialization
-├── mock_data.py                    # Test data
-├── requirements.txt
-│
-├── backend/
-│   ├── controllers/
-│   │   ├── auth_controller.py
-│   │   ├── storefront_controller.py
-│   │   ├── listing_controller.py
-│   │   ├── purchase_controller.py
-│   │   ├── wishlist_controller.py
-│   │   ├── admin_controller.py
-│   │   └── usersettings.py
-│   ├── models/
-│   │   ├── storefront_model.py
-│   │   ├── listing_model.py
-│   │   ├── purchase_model.py
-│   │   ├── wishlist_model.py
-│   │   ├── admin_model.py
-│   │   └── usersettings.py
-│   └── services/
-│       ├── auth_services.py
-│       ├── storefront_service.py
-│       ├── listing_service.py
-│       ├── purchase_service.py
-│       ├── wishlist_service.py
-│       ├── admin_service.py
-│       └── usersettings.py
-│
-├── static/
-│   ├── css/
-│   │   ├── storefront.css
-│   │   ├── storefront_view.css
-│   │   ├── create_storefront.css
-│   │   └── ...
-│   ├── js/
-│   │   ├── storefront.js
-│   │   ├── storefront_view.js
-│   │   ├── create_storefront.js
-│   │   └── ...
-│   └── images/
-│
-└── templates/
-    ├── index.html
-    ├── login.html
-    ├── signup.html
-    ├── storefront.html
-    ├── storefront_view.html
-    ├── create_storefront.html
-    ├── create_listing.html
-    ├── account.html
-    ├── cart.html
-    └── ...
-```
-
----
-
-## Database Schema
-
-The following tables are initialized via `init_db.py`:
-
-- **users** — account info, email, hashed password, role
-- **storefronts** — brand name, description, logo/banner URLs, owner FK
-- **listings** — title, price, description, fulfillment type, inventory, status
-- **listing_images** — image URLs (stored in S3), primary image flag
-- **listing_sizes** — size label and quantity per listing
-- **purchases** — order records linking buyer and seller
-- **wishlist** — saved listings per user
-
----
-
-## API Routes
-
-### Page Routes (`storefront_pages_bp`)
-| Route | Description |
-|---|---|
-| `GET /storefronts` | Storefront homepage |
-| `GET /storefronts/<id>` | Individual storefront view |
-| `GET /storefronts/create` | Create storefront form |
-| `GET /storefronts/my` | User's own storefront |
-
-### API Routes (`storefront_bp` — `/api/storefronts`)
-| Method | Route | Description |
-|---|---|---|
-| GET | `/api/storefronts` | Get all active storefronts |
-| GET | `/api/storefronts/<id>` | Get single storefront |
-| POST | `/api/storefronts` | Create a storefront |
-| PUT | `/api/storefronts/<id>` | Update storefront |
-| PATCH | `/api/storefronts/<id>/deactivate` | Deactivate storefront |
-
-### Auth Routes (`auth_controller`)
-| Method | Route | Description |
-|---|---|---|
-| POST | `/register` | Register new user |
-| POST | `/login` | Login |
-| GET | `/logout` | Logout |
-
-### Admin Routes (`admin_bp` — `/admin`)
-| Method | Route | Description |
-|---|---|---|
-| GET | `/admin/users` | Get all users |
-| DELETE | `/admin/users/<id>` | Delete user |
-| GET | `/admin/listings` | Get all listings |
-| DELETE | `/admin/listings/<id>` | Delete listing |
 
 ---
 
@@ -197,72 +37,58 @@ The following tables are initialized via `init_db.py`:
 
 ### Prerequisites
 - Python 3.12+
-- PostgreSQL (or AWS RDS credentials)
-- AWS credentials (for all service usage)
+- AWS RDS credentials
+- AWS credentials (for S3 access)
 
 ### Installation
 
 ```bash
-# Clone the repo
 git clone https://github.com/DavidJ46/TheVaultProject.git
 cd TheVaultProject
 
-# Create and activate virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate        # macOS/Linux
 venv\Scripts\activate           # Windows
 
-# Install dependencies
 pip install -r requirements.txt
 ```
 
 ### Environment Configuration
 
-Create a `.env` file in the root directory with the following:
+Create a `.env` file in the root directory:
 
-```
 DB_HOST=your-aws-rds-endpoint
 DB_NAME=your-database-name
 DB_USER=your-db-username
 DB_PASSWORD=your-db-password
 DB_PORT=5432
+DB_SSLMODE=require
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_BUCKET=your-s3-bucket-name
-```
+AWS_REGION=us-east-2
+SECRET_KEY=your-secret-key
 
 ### Initialize the Database
 
 ```bash
-python init_db.py
+python3 backend/init_db.py
 ```
 
 ### Run the App
 
 ```bash
-python app.py
+python3 app.py
 ```
 
 Visit `http://127.0.0.1:5000` in your browser.
 
 ---
 
-## Architecture
+## Running Tests
 
-The Vault follows a layered MVC architecture:
-
-```
-Browser (HTML/CSS/JS)
-        ↓
-Flask Application Server (app.py)
-        ↓
-Controller Layer (blueprints, request parsing, routing)
-        ↓
-Service Layer (business logic, validation, permissions)
-        ↓
-Model Layer (SQL queries, database operations)
-        ↓
-AWS RDS PostgreSQL Database
-        ↓ (images)
-Amazon S3
+```bash
+python3 backend/tests/test_file_name
 ```
 
 ---
@@ -271,24 +97,17 @@ Amazon S3
 
 | Name | Role |
 |---|---|
-| David Jackson | Project Manager, Admin backend & frontend|
+| David Jackson | Project Manager, Admin backend & frontend |
 | Elali McNair | Co-PM, Wishlist & Purchase backend, Create Listing frontend |
 | Ryan Grimes | Systems & Security Lead, Auth backend, Login/Signup/Cart frontend |
-| Day Ekoi | Cloud Deployment Lead, Storefront & Listings backend & frontend |
-| Madison Boyd | Documentation Lead, User & Account Settings backend & frontend|
-| Kaila Roberts | Database & App Support, Checkout Backend and Frontend|
+| Day Ekoi | Cloud Deployment Lead, Storefront & Listings backend & frontend, Returns system, AWS deployment |
+| Madison Boyd | Documentation Lead, User & Account Settings backend & frontend |
+| Kaila Roberts | Database & App Support, Checkout backend and frontend |
 
 ---
 
-## Constraints & Notes
+## Notes
 
 - Restricted to Hampton University email addresses (`@hamptonu.edu` / `@my.hamptonu.edu`)
-- Deployed under AWS Free Tier — storage, compute, and database connections are limited
-- Payment integration is conceptual only in the current iteration
-- Sensitive payment data is never stored in the database
-
----
-
-## Current Status
-
-The Vault is currently in active development (Iteration 4 of 5). Core features implemented include user authentication, storefront management, listing management with size-based inventory, storefront browsing frontend, and admin controls. Remaining work includes full purchase/checkout flow, search and filter functionality, and cloud deployment.
+- No payment processing — checkout uses an in-person exchange model
+- Deployed on AWS Free Tier
